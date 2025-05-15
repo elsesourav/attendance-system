@@ -1,23 +1,44 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { signIn } from 'next-auth/react';
+import { signIn, useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Loading } from '@/components/loading';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { status } = useSession();
   const searchParams = useSearchParams();
   const role = searchParams.get('role') || 'student';
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    
+    // Redirect to dashboard if already authenticated
+    if (status === 'authenticated') {
+      router.push('/dashboard');
+    }
+  }, [status, router]);
+
+  if (!mounted) {
+    return <Loading />;
+  }
+
+  // Don't render the login form if already authenticated
+  if (status === 'authenticated') {
+    return null;
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
