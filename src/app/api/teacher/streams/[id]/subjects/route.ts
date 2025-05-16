@@ -1,0 +1,114 @@
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { executeQuery } from "@/lib/db";
+import { getStreamById } from "@/lib/models/stream";
+import { createSubject } from "@/lib/models/subject";
+
+export async function GET(
+   req: NextRequest,
+   { params }: { params: { id: string } }
+) {
+   try {
+      const session = await getServerSession(authOptions);
+
+      if (!session || session.user.role !== "teacher") {
+         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+
+      const { id } = await params;
+
+      const teacherId = session.user.id;
+      const streamId = parseInt(id);
+
+      // Check if the stream belongs to the teacher
+      const stream = await getStreamById(streamId);
+      if (!stream) {
+         return NextResponse.json(
+            { error: "Stream not found" },
+            { status: 404 }
+         );
+      }
+
+      if (stream.teacher_id !== Number(teacherId)) {
+         return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+      }
+
+      // Get subjects in this stream
+      const subjects = await executeQuery(
+         `SELECT id, name, description
+       FROM subjects
+       WHERE stream_id = ?
+       ORDER BY name ASC`,
+         [streamId]
+      );
+
+      return NextResponse.json(subjects);
+   } catch (error) {
+      console.error("Error fetching subjects:", error);
+      return NextResponse.json(
+         { error: "Failed to fetch subjects" },
+         { status: 500 }
+      );
+   }
+}
+
+export async function POST(
+   req: NextRequest,
+   { params }: { params: { id: string } }
+) {
+   try {
+      const session = await getServerSession(authOptions);
+
+      if (!session || session.user.role !== "teacher") {
+         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+
+      const { id } = await params;
+
+      const teacherId = session.user.id;
+      const streamId = parseInt(id);
+      const { name, description } = await req.json();
+
+      // Check if the stream belongs to the teacher
+      const stream = await getStreamById(streamId);
+      if (!stream) {
+         return NextResponse.json(
+            { error: "Stream not found" },
+            { status: 404 }
+         );
+      }
+
+      if (stream.teacher_id !== Number(teacherId)) {
+         return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+      }
+
+      if (!name) {
+         return NextResponse.json(
+            { error: "Subject name is required" },
+            { status: 400 }
+         );
+      }
+
+      // Create the subject
+      const subjectId = await createSubject({
+         name,
+         description,
+         stream_id: streamId,
+      });
+
+      // Get the created subject
+      const subjects = (await executeQuery(
+         "SELECT id, name, description FROM subjects WHERE id = ?",
+         [subjectId]
+      )) as any[];
+
+      return NextResponse.json(subjects[0], { status: 201 });
+   } catch (error) {
+      console.error("Error creating subject:", error);
+      return NextResponse.json(
+         { error: "Failed to create subject" },
+         { status: 500 }
+      );
+   }
+}

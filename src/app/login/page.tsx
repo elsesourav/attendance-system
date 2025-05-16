@@ -1,6 +1,5 @@
 "use client";
 
-import { Loading } from "@/components/loading";
 import { Button } from "@/components/ui/button";
 import {
    Card,
@@ -12,157 +11,167 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { signIn, useSession } from "next-auth/react";
-import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { toast } from "sonner";
 
 export default function LoginPage() {
    const router = useRouter();
-   const { status } = useSession();
-   const searchParams = useSearchParams();
-   const role = searchParams.get("role") || "student";
-
-   const [email, setEmail] = useState("");
-   const [password, setPassword] = useState("");
    const [isLoading, setIsLoading] = useState(false);
-   const [mounted, setMounted] = useState(false);
 
-   useEffect(() => {
-      setMounted(true);
-
-      // Redirect to dashboard if already authenticated
-      if (status === "authenticated") {
-         router.push("/dashboard");
-      }
-   }, [status, router]);
-
-   if (!mounted) {
-      return <Loading />;
-   }
-
-   // Don't render the login form if already authenticated
-   if (status === "authenticated") {
-      return null;
-   }
-
-   const handleSubmit = async (e: React.FormEvent) => {
-      e.preventDefault();
-
-      if (!email || !password) {
-         toast.error("Please fill in all fields");
-         return;
-      }
-
+   const handleSubmit = async (
+      event: React.FormEvent<HTMLFormElement>,
+      role: "student" | "teacher"
+   ) => {
+      event.preventDefault();
       setIsLoading(true);
 
-      try {
-         console.log("Login attempt with:", { email, password: "********" });
-         const result = await signIn("credentials", {
-            email,
-            password,
-            redirect: false,
-         });
+      const formData = new FormData(event.currentTarget);
+      const email = formData.get("email") as string;
+      const password = formData.get("password") as string;
 
-         console.log("SignIn result:", result);
+      try {
+         const result = await signIn(
+            role === "teacher" ? "teacher-login" : "student-login",
+            {
+               email,
+               password,
+               redirect: false,
+            }
+         );
 
          if (result?.error) {
-            console.error("Login error from NextAuth:", result.error);
-
-            // More specific error messages based on the error
-            if (result.error === "CredentialsSignin") {
-               toast.error("Invalid email or password");
-            } else {
-               toast.error(`Login failed: ${result.error}`);
-            }
-
-            setIsLoading(false);
-            return;
-         }
-
-         toast.success("Login successful");
-         router.push("/dashboard");
-      } catch (error) {
-         console.error("Login error:", error);
-
-         // More detailed error message
-         if (error instanceof Error) {
-            toast.error(`Login error: ${error.message}`);
+            toast.error("Invalid credentials. Please try again.");
          } else {
-            toast.error("An unexpected error occurred during login");
+            toast.success(`Logged in successfully as ${role}`);
+            router.push(
+               role === "teacher" ? "/teacher/dashboard" : "/student/dashboard"
+            );
+            router.refresh();
          }
+      } catch (error) {
+         toast.error("An error occurred. Please try again.");
+         console.error(error);
       } finally {
          setIsLoading(false);
       }
    };
 
    return (
-      <div className="flex min-h-screen flex-col items-center justify-center p-4 md:p-8">
-         <Card className="w-full max-w-md shadow-lg">
-            <CardHeader className="text-center">
-               <CardTitle className="text-2xl font-bold">
-                  {role === "teacher" ? "Teacher Login" : "Student Login"}
+      <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
+         <Card className="w-full max-w-md">
+            <CardHeader className="space-y-1">
+               <CardTitle className="text-2xl font-bold text-center">
+                  Attendance System
                </CardTitle>
-               <CardDescription>
-                  Enter your credentials to access your account
+               <CardDescription className="text-center">
+                  Login to access your account
                </CardDescription>
             </CardHeader>
             <CardContent>
-               <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="space-y-2">
-                     <Label htmlFor="email">Email</Label>
-                     <Input
-                        id="email"
-                        type="email"
-                        placeholder="your.email@example.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                     />
-                  </div>
-                  <div className="space-y-2">
-                     <Label htmlFor="password">Password</Label>
-                     <Input
-                        id="password"
-                        type="password"
-                        placeholder="••••••••"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                     />
-                  </div>
-                  <Button type="submit" className="w-full" disabled={isLoading}>
-                     {isLoading ? "Logging in..." : "Login"}
-                  </Button>
-               </form>
+               <Tabs defaultValue="student" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                     <TabsTrigger value="student">Student</TabsTrigger>
+                     <TabsTrigger value="teacher">Teacher</TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="student">
+                     <form
+                        onSubmit={(e) => handleSubmit(e, "student")}
+                        className="space-y-4 mt-4"
+                     >
+                        <div className="space-y-2">
+                           <Label htmlFor="student-email">Email</Label>
+                           <Input
+                              id="student-email"
+                              name="email"
+                              type="email"
+                              placeholder="student@example.com"
+                              required
+                           />
+                        </div>
+                        <div className="space-y-2">
+                           <Label htmlFor="student-password">Password</Label>
+                           <Input
+                              id="student-password"
+                              name="password"
+                              type="password"
+                              required
+                           />
+                        </div>
+                        <Button
+                           type="submit"
+                           className="w-full"
+                           disabled={isLoading}
+                        >
+                           {isLoading ? "Logging in..." : "Login as Student"}
+                        </Button>
+                     </form>
+                  </TabsContent>
+
+                  <TabsContent value="teacher">
+                     <form
+                        onSubmit={(e) => handleSubmit(e, "teacher")}
+                        className="space-y-4 mt-4"
+                     >
+                        <div className="space-y-2">
+                           <Label htmlFor="teacher-email">Email</Label>
+                           <Input
+                              id="teacher-email"
+                              name="email"
+                              type="email"
+                              placeholder="teacher@example.com"
+                              required
+                           />
+                        </div>
+                        <div className="space-y-2">
+                           <Label htmlFor="teacher-password">Password</Label>
+                           <Input
+                              id="teacher-password"
+                              name="password"
+                              type="password"
+                              required
+                           />
+                        </div>
+                        <Button
+                           type="submit"
+                           className="w-full"
+                           disabled={isLoading}
+                        >
+                           {isLoading ? "Logging in..." : "Login as Teacher"}
+                        </Button>
+                     </form>
+                  </TabsContent>
+               </Tabs>
             </CardContent>
-            <CardFooter className="flex flex-col space-y-2">
-               <p className="text-sm text-muted-foreground text-center">
-                  Don't have an account?{" "}
-                  <Link
-                     href="/register"
-                     className="text-primary hover:underline"
-                  >
-                     Register here
-                  </Link>
-               </p>
-               <p className="text-sm text-muted-foreground text-center">
-                  {role === "teacher" ? (
-                     <Link
-                        href="/login?role=student"
-                        className="text-primary hover:underline"
+            <CardFooter className="flex flex-col space-y-4">
+               <div className="w-full text-center">
+                  <p className="text-sm text-muted-foreground mb-2">
+                     Don&apos;t have an account?
+                  </p>
+                  <div className="flex justify-center space-x-4">
+                     <Button
+                        variant="outline"
+                        onClick={() => router.push("/register/student")}
                      >
-                        Login as Student
-                     </Link>
-                  ) : (
-                     <Link
-                        href="/login?role=teacher"
-                        className="text-primary hover:underline"
+                        Register as Student
+                     </Button>
+                     <Button
+                        variant="outline"
+                        onClick={() => router.push("/register/teacher")}
                      >
-                        Login as Teacher
-                     </Link>
-                  )}
+                        Register as Teacher
+                     </Button>
+                  </div>
+               </div>
+               <p className="text-center text-sm text-gray-500 mt-4">
+                  Sample credentials:
+                  <br />
+                  Teacher: teacher1@example.com / password
+                  <br />
+                  Student: student1@example.com / password
                </p>
             </CardFooter>
          </Card>

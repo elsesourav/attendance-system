@@ -1,36 +1,79 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Attendance System
 
-## Getting Started
+A comprehensive attendance management system built with Next.js, MySQL, Shadcn UI, and Tailwind CSS.
 
-First, run the development server:
+## Features
+
+-  **User Authentication**: Separate login for teachers and students
+-  **Teacher Dashboard**: Create and manage streams, subjects, and track student attendance
+-  **Student Dashboard**: View enrolled streams, subjects, and attendance records
+-  **Attendance Tracking**: Mark and view attendance for each subject
+
+## Tech Stack
+
+-  **Frontend**: Next.js, React, Tailwind CSS, Shadcn UI
+-  **Backend**: Next.js API Routes
+-  **Database**: MySQL
+-  **Authentication**: NextAuth.js
+-  **Styling**: Tailwind CSS, Shadcn UI components
+
+## Prerequisites
+
+-  Node.js (v18 or higher)
+-  MySQL server
+
+## Setup Instructions
+
+### 1. Clone the repository
+
+```bash
+git clone <repository-url>
+cd attendance-system
+```
+
+### 2. Install dependencies
+
+```bash
+npm install
+```
+
+### 3. Configure environment variables
+
+Create a `.env.local` file in the root directory with the following variables:
+
+```
+MYSQL_HOST=localhost
+MYSQL_USER=root
+MYSQL_PASSWORD=your_mysql_password
+MYSQL_DATABASE=attendance_system
+NEXTAUTH_SECRET=your_nextauth_secret
+NEXTAUTH_URL=http://localhost:3000
+```
+
+### 4. Initialize the database
+
+```bash
+npm run init-db
+```
+
+This will create the database and tables defined in `database.sql`.
+
+### 5. Run the development server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the application.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Sample Credentials
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Teachers
 
-## Learn More
+-  Email: teacher1@example.com
+-  Password: password
 
-To learn more about Next.js, take a look at the following resources:
+### Students
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+-  Email: student1@example.com
+-  Password: password

@@ -1,30 +1,30 @@
-import mysql from "mysql2/promise";
+import mysql from 'mysql2/promise';
 
-// Create a connection pool
-const pool = mysql.createPool({
-   host: process.env.MYSQL_HOST || "localhost",
-   user: process.env.MYSQL_USER || "root",
-   password: process.env.MYSQL_PASSWORD || "",
-   database: process.env.MYSQL_DATABASE || "attendance_system",
-   waitForConnections: true,
-   connectionLimit: 10,
-   queueLimit: 0,
-});
-
-export async function executeQuery<T>({
-   query,
-   values,
-}: {
-   query: string;
-   values?: any[];
-}): Promise<T> {
-   try {
-      const [result] = await pool.execute(query, values);
-      return result as T;
-   } catch (error) {
-      console.error("Database query error:", error);
-      throw error;
-   }
+export async function getConnection() {
+  try {
+    const connection = await mysql.createConnection({
+      host: process.env.MYSQL_HOST,
+      user: process.env.MYSQL_USER,
+      password: process.env.MYSQL_PASSWORD,
+      database: process.env.MYSQL_DATABASE,
+    });
+    
+    return connection;
+  } catch (error) {
+    console.error('Error connecting to database:', error);
+    throw new Error('Failed to connect to database');
+  }
 }
 
-export default pool;
+export async function executeQuery(query: string, params: any[] = []) {
+  const connection = await getConnection();
+  try {
+    const [results] = await connection.execute(query, params);
+    return results;
+  } catch (error) {
+    console.error('Error executing query:', error);
+    throw error;
+  } finally {
+    await connection.end();
+  }
+}
