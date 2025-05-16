@@ -31,11 +31,36 @@ export async function GET(req: NextRequest) {
       let hasAccess = false;
 
       if (role === "teacher") {
+         // First try with the session user ID
          const teacherStreams = await executeQuery({
             query: "SELECT * FROM streams WHERE id = ? AND teacher_id = ?",
             values: [streamId, userId],
          });
-         hasAccess = teacherStreams.length > 0;
+
+         if (teacherStreams.length > 0) {
+            hasAccess = true;
+         } else {
+            // If not found, try to find the teacher by email
+            const teacherEmail = session.user.email;
+            console.log("Checking teacher access by email:", teacherEmail);
+
+            const teacherByEmail = await executeQuery({
+               query: "SELECT * FROM users WHERE email = ? AND role = 'teacher'",
+               values: [teacherEmail],
+            });
+
+            if (teacherByEmail.length > 0) {
+               const dbTeacherId = teacherByEmail[0].id;
+               console.log("Found teacher by email with ID:", dbTeacherId);
+
+               const teacherStreamsByEmail = await executeQuery({
+                  query: "SELECT * FROM streams WHERE id = ? AND teacher_id = ?",
+                  values: [streamId, dbTeacherId],
+               });
+
+               hasAccess = teacherStreamsByEmail.length > 0;
+            }
+         }
       } else if (role === "student") {
          const studentEnrollments = await executeQuery({
             query: "SELECT * FROM enrollments WHERE stream_id = ? AND student_id = ?",
@@ -62,6 +87,8 @@ export async function GET(req: NextRequest) {
 
       // Check for subject_id parameter
       const subjectId = url.searchParams.get("subjectId");
+      console.log("Subject ID:", subjectId);
+
       if (subjectId) {
          query += " AND a.subject_id = ?";
          queryParams.push(subjectId);
@@ -85,12 +112,45 @@ export async function GET(req: NextRequest) {
 
       query += " ORDER BY a.date DESC, u.name ASC";
 
-      const attendance = await executeQuery({
+      console.log("Final attendance query:", query);
+      console.log("Query params:", queryParams);
+
+      // First check if there are any students enrolled in this stream
+      const enrolledStudents = await executeQuery<any[]>({
+         query: "SELECT * FROM enrollments WHERE stream_id = ?",
+         values: [streamId],
+      });
+
+      console.log("Enrolled students in stream:", enrolledStudents);
+
+      // Check if there are any attendance records at all for this stream
+      const allStreamAttendance = await executeQuery<any[]>({
+         query: "SELECT * FROM attendance WHERE stream_id = ?",
+         values: [streamId],
+      });
+
+      console.log("All attendance records for stream:", allStreamAttendance);
+
+      const attendance = await executeQuery<any[]>({
          query,
          values: queryParams,
       });
 
-      console.log("Attendance records:", attendance);
+      console.log("Attendance records for query:", attendance);
+
+      // If no attendance records found, check if there are students enrolled
+      if (attendance.length === 0) {
+         // If there are enrolled students but no attendance records, return an empty array with a message
+         if (enrolledStudents.length > 0) {
+            return NextResponse.json({
+               records: [],
+               message:
+                  "No attendance records found for the selected date and stream",
+               enrolledStudents: enrolledStudents.length,
+               hasAttendanceRecords: allStreamAttendance.length > 0,
+            });
+         }
+      }
 
       return NextResponse.json(attendance);
    } catch (error) {
@@ -144,12 +204,40 @@ export async function POST(req: NextRequest) {
       }
 
       // Check if teacher owns this stream
+      let hasAccess = false;
+
+      // First try with the session user ID
       const teacherStreams = await executeQuery({
          query: "SELECT * FROM streams WHERE id = ? AND teacher_id = ?",
          values: [streamId, session.user.id],
       });
 
-      if (teacherStreams.length === 0) {
+      if (teacherStreams.length > 0) {
+         hasAccess = true;
+      } else {
+         // If not found, try to find the teacher by email
+         const teacherEmail = session.user.email;
+         console.log("Checking teacher access by email:", teacherEmail);
+
+         const teacherByEmail = await executeQuery({
+            query: "SELECT * FROM users WHERE email = ? AND role = 'teacher'",
+            values: [teacherEmail],
+         });
+
+         if (teacherByEmail.length > 0) {
+            const dbTeacherId = teacherByEmail[0].id;
+            console.log("Found teacher by email with ID:", dbTeacherId);
+
+            const teacherStreamsByEmail = await executeQuery({
+               query: "SELECT * FROM streams WHERE id = ? AND teacher_id = ?",
+               values: [streamId, dbTeacherId],
+            });
+
+            hasAccess = teacherStreamsByEmail.length > 0;
+         }
+      }
+
+      if (!hasAccess) {
          return NextResponse.json({ error: "Access denied" }, { status: 403 });
       }
 

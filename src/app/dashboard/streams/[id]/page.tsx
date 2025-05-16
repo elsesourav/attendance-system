@@ -1,6 +1,5 @@
 "use client";
 
-import { DataCleanup } from "@/components/cleanup/DataCleanup";
 import { Loading } from "@/components/loading";
 import { SubjectManager } from "@/components/subjects/SubjectManager";
 import { Button } from "@/components/ui/button";
@@ -89,6 +88,18 @@ export default function StreamDetailPage() {
    const [mounted, setMounted] = useState(false);
    const [activeTab, setActiveTab] = useState("students");
 
+   // Handle tab parameter from URL
+   useEffect(() => {
+      const params = new URLSearchParams(window.location.search);
+      const tabParam = params.get("tab");
+      if (
+         tabParam &&
+         ["students", "subjects", "attendance"].includes(tabParam)
+      ) {
+         setActiveTab(tabParam);
+      }
+   }, []);
+
    const isTeacher = session?.user?.role === "teacher";
 
    useEffect(() => {
@@ -142,11 +153,15 @@ export default function StreamDetailPage() {
                }
             );
 
+            console.log("Subjects response:", subjectsResponse);
+
             if (!subjectsResponse.ok) {
                throw new Error("Failed to fetch subjects");
             }
 
             const subjectsData = await subjectsResponse.json();
+            console.log("Subjects data:", subjectsData);
+
             setSubjects(subjectsData);
 
             // Fetch attendance records
@@ -186,7 +201,19 @@ export default function StreamDetailPage() {
          }
 
          const attendanceData = await attendanceResponse.json();
-         setAttendance(attendanceData);
+
+         // Check if the response has the new format with records property
+         if (attendanceData.records !== undefined) {
+            setAttendance(attendanceData.records);
+
+            // If there's a message and no records, show it to the user
+            if (attendanceData.records.length === 0 && attendanceData.message) {
+               toast.info(attendanceData.message);
+            }
+         } else {
+            // Handle the old format (array of attendance records)
+            setAttendance(attendanceData);
+         }
       } catch (error) {
          console.error("Error fetching attendance records:", error);
          toast.error("Failed to load attendance records");
@@ -359,9 +386,6 @@ export default function StreamDetailPage() {
                <TabsTrigger value="students">Students</TabsTrigger>
                <TabsTrigger value="subjects">Subjects</TabsTrigger>
                <TabsTrigger value="attendance">Attendance</TabsTrigger>
-               {isTeacher && (
-                  <TabsTrigger value="cleanup">Data Cleanup</TabsTrigger>
-               )}
             </TabsList>
 
             {/* Students Tab */}
@@ -612,13 +636,6 @@ export default function StreamDetailPage() {
                   </CardContent>
                </Card>
             </TabsContent>
-
-            {/* Data Cleanup Tab (Teachers only) */}
-            {isTeacher && (
-               <TabsContent value="cleanup">
-                  <DataCleanup streams={[stream]} subjects={subjects} />
-               </TabsContent>
-            )}
          </Tabs>
       </div>
    );

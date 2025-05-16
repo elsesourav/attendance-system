@@ -6,10 +6,13 @@ import { NextRequest, NextResponse } from "next/server";
 // GET a specific stream
 export async function GET(
    req: NextRequest,
-   { params }: { params: { id: string } }
+   context: { params: { id: string } }
 ) {
    try {
-      console.log("Fetching stream with ID:", params.id);
+      // In Next.js App Router, params is already resolved
+      const { id } = await context.params;
+      const streamId = id;
+
       const session = await getServerSession(authOptions);
       console.log("Session:", session);
 
@@ -17,8 +20,6 @@ export async function GET(
          console.log("Unauthorized: No session or user");
          return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
-
-      const streamId = params.id;
       const userId = session.user.id;
       const role = session.user.role;
 
@@ -26,25 +27,75 @@ export async function GET(
       let hasAccess = false;
 
       if (role === "teacher") {
-         const teacherStreams = await executeQuery({
+         // First try with the session user ID
+         const teacherStreams = await executeQuery<any[]>({
             query: "SELECT * FROM streams WHERE id = ? AND teacher_id = ?",
             values: [streamId, userId],
          });
-         hasAccess = teacherStreams.length > 0;
+
+         if (teacherStreams.length > 0) {
+            hasAccess = true;
+         } else {
+            // If not found, try to find the teacher by email
+            const teacherEmail = session.user.email;
+            console.log("Checking teacher access by email:", teacherEmail);
+
+            const teacherByEmail = await executeQuery<any[]>({
+               query: "SELECT * FROM users WHERE email = ? AND role = 'teacher'",
+               values: [teacherEmail],
+            });
+
+            if (teacherByEmail.length > 0) {
+               const dbTeacherId = teacherByEmail[0].id;
+               console.log("Found teacher by email with ID:", dbTeacherId);
+
+               const teacherStreamsByEmail = await executeQuery<any[]>({
+                  query: "SELECT * FROM streams WHERE id = ? AND teacher_id = ?",
+                  values: [streamId, dbTeacherId],
+               });
+
+               hasAccess = teacherStreamsByEmail.length > 0;
+            }
+         }
       } else if (role === "student") {
-         const studentEnrollments = await executeQuery({
+         // First try with the session user ID
+         const studentEnrollments = await executeQuery<any[]>({
             query: "SELECT * FROM enrollments WHERE stream_id = ? AND student_id = ?",
             values: [streamId, userId],
          });
-         hasAccess = studentEnrollments.length > 0;
+
+         if (studentEnrollments.length > 0) {
+            hasAccess = true;
+         } else {
+            // If not found, try to find the student by email
+            const studentEmail = session.user.email;
+            console.log("Checking student access by email:", studentEmail);
+
+            const studentByEmail = await executeQuery<any[]>({
+               query: "SELECT * FROM users WHERE email = ? AND role = 'student'",
+               values: [studentEmail],
+            });
+
+            if (studentByEmail.length > 0) {
+               const dbStudentId = studentByEmail[0].id;
+               console.log("Found student by email with ID:", dbStudentId);
+
+               const studentEnrollmentsByEmail = await executeQuery<any[]>({
+                  query: "SELECT * FROM enrollments WHERE stream_id = ? AND student_id = ?",
+                  values: [streamId, dbStudentId],
+               });
+
+               hasAccess = studentEnrollmentsByEmail.length > 0;
+            }
+         }
       }
 
-      if (!hasAccess) {
+      if (hasAccess === false) {
          return NextResponse.json({ error: "Access denied" }, { status: 403 });
       }
 
       // Get stream details
-      const streams = await executeQuery({
+      const streams = await executeQuery<any[]>({
          query: "SELECT * FROM streams WHERE id = ?",
          values: [streamId],
       });
@@ -69,16 +120,18 @@ export async function GET(
 // PUT update a stream (teachers only)
 export async function PUT(
    req: NextRequest,
-   { params }: { params: { id: string } }
+   context: { params: { id: string } }
 ) {
    try {
+      // Extract the ID from context.params
+      const { id } = context.params;
+      const streamId = id;
+
       const session = await getServerSession(authOptions);
 
       if (!session || !session.user || session.user.role !== "teacher") {
          return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
-
-      const streamId = params.id;
       const { name, description } = await req.json();
 
       if (!name) {
@@ -89,12 +142,40 @@ export async function PUT(
       }
 
       // Check if teacher owns this stream
-      const teacherStreams = await executeQuery({
+      let hasAccess = false;
+
+      // First try with the session user ID
+      const teacherStreams = await executeQuery<any[]>({
          query: "SELECT * FROM streams WHERE id = ? AND teacher_id = ?",
          values: [streamId, session.user.id],
       });
 
-      if (teacherStreams.length === 0) {
+      if (teacherStreams.length > 0) {
+         hasAccess = true;
+      } else {
+         // If not found, try to find the teacher by email
+         const teacherEmail = session.user.email;
+         console.log("Checking teacher access by email:", teacherEmail);
+
+         const teacherByEmail = await executeQuery<any[]>({
+            query: "SELECT * FROM users WHERE email = ? AND role = 'teacher'",
+            values: [teacherEmail],
+         });
+
+         if (teacherByEmail.length > 0) {
+            const dbTeacherId = teacherByEmail[0].id;
+            console.log("Found teacher by email with ID:", dbTeacherId);
+
+            const teacherStreamsByEmail = await executeQuery<any[]>({
+               query: "SELECT * FROM streams WHERE id = ? AND teacher_id = ?",
+               values: [streamId, dbTeacherId],
+            });
+
+            hasAccess = teacherStreamsByEmail.length > 0;
+         }
+      }
+
+      if (!hasAccess) {
          return NextResponse.json({ error: "Access denied" }, { status: 403 });
       }
 
@@ -115,25 +196,55 @@ export async function PUT(
 
 // DELETE a stream (teachers only)
 export async function DELETE(
-   req: NextRequest,
-   { params }: { params: { id: string } }
+   _req: NextRequest, // Prefix with underscore to indicate it's not used
+   context: { params: { id: string } }
 ) {
    try {
+      // Extract the ID from context.params
+      const { id } = context.params;
+      const streamId = id;
+
       const session = await getServerSession(authOptions);
 
       if (!session || !session.user || session.user.role !== "teacher") {
          return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
 
-      const streamId = params.id;
-
       // Check if teacher owns this stream
-      const teacherStreams = await executeQuery({
+      let hasAccess = false;
+
+      // First try with the session user ID
+      const teacherStreams = await executeQuery<any[]>({
          query: "SELECT * FROM streams WHERE id = ? AND teacher_id = ?",
          values: [streamId, session.user.id],
       });
 
-      if (teacherStreams.length === 0) {
+      if (teacherStreams.length > 0) {
+         hasAccess = true;
+      } else {
+         // If not found, try to find the teacher by email
+         const teacherEmail = session.user.email;
+         console.log("Checking teacher access by email:", teacherEmail);
+
+         const teacherByEmail = await executeQuery<any[]>({
+            query: "SELECT * FROM users WHERE email = ? AND role = 'teacher'",
+            values: [teacherEmail],
+         });
+
+         if (teacherByEmail.length > 0) {
+            const dbTeacherId = teacherByEmail[0].id;
+            console.log("Found teacher by email with ID:", dbTeacherId);
+
+            const teacherStreamsByEmail = await executeQuery<any[]>({
+               query: "SELECT * FROM streams WHERE id = ? AND teacher_id = ?",
+               values: [streamId, dbTeacherId],
+            });
+
+            hasAccess = teacherStreamsByEmail.length > 0;
+         }
+      }
+
+      if (!hasAccess) {
          return NextResponse.json({ error: "Access denied" }, { status: 403 });
       }
 

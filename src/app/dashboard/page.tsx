@@ -6,7 +6,6 @@ import {
    Card,
    CardContent,
    CardDescription,
-   CardFooter,
    CardHeader,
    CardTitle,
 } from "@/components/ui/card";
@@ -113,6 +112,63 @@ export default function DashboardPage() {
             )}
          </div>
 
+         {/* Quick Actions for Teachers */}
+         {session?.user?.role === "teacher" && (
+            <Card>
+               <CardHeader>
+                  <CardTitle>Quick Actions</CardTitle>
+                  <CardDescription>
+                     Manage your streams and subjects
+                  </CardDescription>
+               </CardHeader>
+               <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                     <div className="p-4 border rounded-lg bg-muted/50">
+                        <h3 className="font-medium mb-2">Create Stream</h3>
+                        <p className="text-sm text-muted-foreground mb-4">
+                           Create a new stream for your classes
+                        </p>
+                        <Link href="/dashboard/streams/create">
+                           <Button variant="outline" size="sm">
+                              Create Stream
+                           </Button>
+                        </Link>
+                     </div>
+
+                     {streams.length > 0 && (
+                        <div className="p-4 border rounded-lg bg-muted/50">
+                           <h3 className="font-medium mb-2">Manage Subjects</h3>
+                           <p className="text-sm text-muted-foreground mb-4">
+                              Add or edit subjects in your streams
+                           </p>
+                           <Link href={`/dashboard/streams/${streams[0]?.id}`}>
+                              <Button variant="outline" size="sm">
+                                 Manage Subjects
+                              </Button>
+                           </Link>
+                        </div>
+                     )}
+
+                     {streams.length > 0 && (
+                        <div className="p-4 border rounded-lg bg-muted/50">
+                           <h3 className="font-medium mb-2">Take Attendance</h3>
+                           <p className="text-sm text-muted-foreground mb-4">
+                              Record attendance for your classes
+                           </p>
+                           <Link
+                              href={`/dashboard/streams/${streams[0]?.id}?tab=attendance`}
+                           >
+                              <Button variant="outline" size="sm">
+                                 Take Attendance
+                              </Button>
+                           </Link>
+                        </div>
+                     )}
+                  </div>
+               </CardContent>
+            </Card>
+         )}
+
          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {streams.length === 0 ? (
                <div className="col-span-full text-center py-12">
@@ -144,27 +200,69 @@ export default function DashboardPage() {
                         </CardDescription>
                      </CardHeader>
                      <CardContent>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-sm text-muted-foreground mb-4">
                            Created:{" "}
                            {new Date(stream.created_at).toLocaleDateString()}
                         </p>
-                     </CardContent>
-                     <CardFooter className="flex justify-between border-t p-4 bg-muted/50">
-                        <Link href={`/dashboard/streams/${stream.id}`}>
-                           <Button variant="outline" size="sm">
-                              View Details
-                           </Button>
-                        </Link>
+
                         {session?.user?.role === "teacher" && (
-                           <Button
-                              variant="destructive"
-                              size="sm"
-                              onClick={() => handleDeleteStream(stream.id)}
-                           >
-                              Delete
-                           </Button>
+                           <div className="grid grid-cols-2 gap-2">
+                              <Link
+                                 href={`/dashboard/streams/${stream.id}?tab=subjects`}
+                              >
+                                 <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="w-full"
+                                 >
+                                    Manage Subjects
+                                 </Button>
+                              </Link>
+                              <Link
+                                 href={`/dashboard/streams/${stream.id}?tab=students`}
+                              >
+                                 <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="w-full"
+                                 >
+                                    Manage Students
+                                 </Button>
+                              </Link>
+                              <Link
+                                 href={`/dashboard/streams/${stream.id}?tab=attendance`}
+                              >
+                                 <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="w-full"
+                                 >
+                                    Take Attendance
+                                 </Button>
+                              </Link>
+                              <Button
+                                 variant="destructive"
+                                 size="sm"
+                                 className="w-full"
+                                 onClick={() => handleDeleteStream(stream.id)}
+                              >
+                                 Delete Stream
+                              </Button>
+                           </div>
                         )}
-                     </CardFooter>
+
+                        {session?.user?.role === "student" && (
+                           <Link href={`/dashboard/streams/${stream.id}`}>
+                              <Button
+                                 variant="outline"
+                                 size="sm"
+                                 className="w-full"
+                              >
+                                 View Details
+                              </Button>
+                           </Link>
+                        )}
+                     </CardContent>
                   </Card>
                ))
             )}
