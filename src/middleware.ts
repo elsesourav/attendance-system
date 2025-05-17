@@ -10,7 +10,12 @@ export async function middleware(request: NextRequest) {
    const path = request.nextUrl.pathname;
 
    // Public routes that don't require authentication
-   const publicRoutes = ["/login", "/register/student", "/register/teacher"];
+   const publicRoutes = [
+      "/",
+      "/login",
+      "/register/student",
+      "/register/teacher",
+   ];
    const isPublicRoute =
       publicRoutes.includes(path) ||
       path.startsWith("/api/auth") ||
@@ -18,7 +23,7 @@ export async function middleware(request: NextRequest) {
 
    // Redirect to login if not authenticated and not accessing a public route
    if (!isAuthenticated && !isPublicRoute) {
-      return NextResponse.redirect(new URL("/login", request.url));
+      return NextResponse.redirect(new URL("/", request.url));
    }
 
    // Redirect to appropriate dashboard if already logged in and trying to access login or register pages

@@ -11,6 +11,16 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
    title: "Attendance System",
    description: "A system for tracking student attendance",
+   icons: {
+      icon: [
+         { url: "/images/icon-64.png", sizes: "64x64", type: "image/png" },
+         {
+            url: "/images/icon-1024.png",
+            sizes: "1024x1024",
+            type: "image/png",
+         },
+      ],
+   },
 };
 
 export default function RootLayout({

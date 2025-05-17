@@ -16,12 +16,12 @@ export async function GET() {
       // Get all subjects for this teacher with stream name and student count
       const subjects = await executeQuery(
          `SELECT s.id, s.name, s.description, s.stream_id,
-        str.name as streamName,
-        (SELECT COUNT(*) FROM subject_enrollments se WHERE se.subject_id = s.id) as studentCount
-       FROM subjects s
-       JOIN streams str ON s.stream_id = str.id
-       WHERE str.teacher_id = ?
-       ORDER BY str.name ASC, s.name ASC`,
+         str.name as streamName,
+         (SELECT COUNT(*) FROM subject_enrollments se WHERE se.subject_id = s.id) as studentCount
+         FROM subjects s
+         JOIN streams str ON s.stream_id = str.id
+         WHERE str.teacher_id = ?
+         ORDER BY str.name ASC, s.name ASC`,
          [teacherId]
       );
 

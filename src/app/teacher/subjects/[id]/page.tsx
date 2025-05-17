@@ -315,8 +315,8 @@ export default function SubjectView() {
                   <div>Students: {subject.studentCount}</div>
                </div>
             </CardContent>
-            <CardFooter className="flex justify-between">
-               <div className="space-x-2">
+            <CardFooter className="flex justify-between items-center flex-col md:flex-row gap-2">
+               <div className="flex flex-col md:flex-row gap-2">
                   <Link
                      href={`/teacher/subjects/${subjectId}/students`}
                      onClick={() =>
@@ -356,7 +356,7 @@ export default function SubjectView() {
 
          <div className="mt-8 flex justify-between items-center">
             <div>
-               <h2 className="text-2xl font-bold">Today&apos;s Attendance</h2>
+               <h2 className="text-lg md:text-2xl font-bold">Today&apos;s Attendance</h2>
                <p className="text-sm text-muted-foreground">
                   {new Date().toLocaleDateString(undefined, {
                      weekday: "long",

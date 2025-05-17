@@ -6,14 +6,6 @@ import { getSubjectById } from "@/lib/models/subject";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 
-// We can use this interface if we need to refactor the code later
-// interface AttendanceQueryParams {
-//    subjectId: number;
-//    date?: string;
-//    month?: string;
-//    year?: string;
-// }
-
 export async function GET(
    req: NextRequest,
    { params }: { params: Promise<{ id: string }> }
@@ -75,7 +67,7 @@ export async function GET(
       FROM attendance a
       JOIN students s ON a.student_id = s.id
       WHERE a.subject_id = ?
-    `;
+      `;
 
       const queryParams: (number | string)[] = [subjectId];
 

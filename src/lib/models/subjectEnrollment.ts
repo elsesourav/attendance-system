@@ -32,12 +32,24 @@ export async function unenrollStudentFromSubject(
    studentId: number,
    subjectId: number
 ): Promise<boolean> {
-   const result = (await executeQuery(
-      "DELETE FROM subject_enrollments WHERE student_id = ? AND subject_id = ?",
-      [studentId, subjectId]
-   )) as { affectedRows: number };
+   try {
+      // First, delete all attendance records for this student in this subject
+      await executeQuery(
+         "DELETE FROM attendance WHERE student_id = ? AND subject_id = ?",
+         [studentId, subjectId]
+      );
 
-   return result.affectedRows > 0;
+      // Then, delete the enrollment
+      const result = (await executeQuery(
+         "DELETE FROM subject_enrollments WHERE student_id = ? AND subject_id = ?",
+         [studentId, subjectId]
+      )) as { affectedRows: number };
+
+      return result.affectedRows > 0;
+   } catch (error) {
+      console.error("Error unenrolling student from subject:", error);
+      return false;
+   }
 }
 
 export async function getEnrollmentsBySubjectId(

@@ -39,14 +39,14 @@ export async function GET(req: NextRequest) {
       // Get students not enrolled in any subject of this stream
       const students = await executeQuery(
          `SELECT id, name, email, registration_number
-       FROM students
-       WHERE id NOT IN (
-         SELECT DISTINCT se.student_id
-         FROM subject_enrollments se
-         JOIN subjects sub ON se.subject_id = sub.id
-         WHERE sub.stream_id = ?
-       )
-       ORDER BY name ASC`,
+         FROM students
+         WHERE id NOT IN (
+            SELECT DISTINCT se.student_id
+            FROM subject_enrollments se
+            JOIN subjects sub ON se.subject_id = sub.id
+            WHERE sub.stream_id = ?
+         )
+         ORDER BY name ASC`,
          [streamId]
       );
 
