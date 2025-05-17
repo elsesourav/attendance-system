@@ -1,5 +1,6 @@
 "use client";
 
+import { useLoading } from "@/components/loading-overlay";
 import { Button } from "@/components/ui/button";
 import {
    Card,
@@ -21,13 +22,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-   Select,
-   SelectContent,
-   SelectItem,
-   SelectTrigger,
-   SelectValue,
-} from "@/components/ui/select";
-import {
    Table,
    TableBody,
    TableCell,
@@ -45,6 +39,7 @@ import {
    FiPlus,
    FiUsers,
 } from "react-icons/fi";
+import { RiAlertLine } from "react-icons/ri";
 import { toast } from "sonner";
 
 interface Subject {
@@ -74,9 +69,15 @@ interface AttendanceRecord {
 export default function SubjectView() {
    const params = useParams();
    const router = useRouter();
+   const { showLoading, hideLoading } = useLoading();
    const subjectId = params.id as string;
    const searchParams = useSearchParams();
    const fromStream = searchParams.get("from") === "stream";
+
+   // Hide loading overlay when component mounts
+   useEffect(() => {
+      hideLoading();
+   }, [hideLoading]);
 
    const [subject, setSubject] = useState<Subject | null>(null);
    const [students, setStudents] = useState<Student[]>([]);
@@ -211,13 +212,19 @@ export default function SubjectView() {
    }, [selectedDate, isAddingAttendance, subjectId]);
 
    const handleSaveAttendance = async () => {
-      if (Object.keys(attendanceData).length === 0) {
-         toast.error("No attendance data to save");
-         return;
-      }
+      // Create a complete attendance record for all students
+      // Mark any student without a status as "absent"
+      const completeAttendanceData = { ...attendanceData };
+
+      // Check for any students without attendance status and mark them as absent
+      students.forEach((student) => {
+         if (!completeAttendanceData[student.id]) {
+            completeAttendanceData[student.id] = "absent";
+         }
+      });
 
       try {
-         const attendanceRecords = Object.entries(attendanceData).map(
+         const attendanceRecords = Object.entries(completeAttendanceData).map(
             ([studentId, status]) => ({
                student_id: parseInt(studentId),
                status,
@@ -284,11 +291,9 @@ export default function SubjectView() {
                size="icon"
                className="mr-2"
                onClick={() => {
-                  if (fromStream && subject) {
-                     router.push(`/teacher/streams/${subject.streamId}`);
-                  } else {
-                     router.push("/teacher/subjects");
-                  }
+                  // Hide loading first, then navigate back
+                  hideLoading();
+                  router.back();
                }}
             >
                <FiArrowLeft className="h-4 w-4" />
@@ -311,20 +316,35 @@ export default function SubjectView() {
             </CardContent>
             <CardFooter className="flex justify-between">
                <div className="space-x-2">
-                  <Link href={`/teacher/subjects/${subjectId}/students`}>
+                  <Link
+                     href={`/teacher/subjects/${subjectId}/students`}
+                     onClick={() =>
+                        showLoading(`Loading students for ${subject.name}...`)
+                     }
+                  >
                      <Button variant="outline">
                         <FiUsers className="mr-2" />
                         Manage Students
                      </Button>
                   </Link>
-                  <Link href={`/teacher/subjects/${subjectId}/attendance`}>
+                  <Link
+                     href={`/teacher/subjects/${subjectId}/attendance`}
+                     onClick={() =>
+                        showLoading(`Loading attendance for ${subject.name}...`)
+                     }
+                  >
                      <Button variant="outline">
                         <FiCalendar className="mr-2" />
                         View Attendance
                      </Button>
                   </Link>
                </div>
-               <Link href={`/teacher/subjects/${subjectId}/edit`}>
+               <Link
+                  href={`/teacher/subjects/${subjectId}/edit`}
+                  onClick={() =>
+                     showLoading(`Loading edit form for ${subject.name}...`)
+                  }
+               >
                   <Button variant="outline">
                      <FiEdit className="mr-2" />
                      Edit Subject
@@ -398,6 +418,9 @@ export default function SubjectView() {
                                     <TableHead>Name</TableHead>
                                     <TableHead>Registration No.</TableHead>
                                     <TableHead>Status</TableHead>
+                                    <TableHead className="w-24 text-right">
+                                       Marked
+                                    </TableHead>
                                  </TableRow>
                               </TableHeader>
                               <TableBody>
@@ -408,40 +431,156 @@ export default function SubjectView() {
                                           {student.registration_number}
                                        </TableCell>
                                        <TableCell>
-                                          <Select
-                                             value={
-                                                attendanceData[student.id] || ""
-                                             }
-                                             onValueChange={(value) =>
-                                                handleAttendanceChange(
-                                                   student.id,
-                                                   value as
-                                                      | "present"
-                                                      | "absent"
-                                                      | "late"
-                                                )
-                                             }
-                                          >
-                                             <SelectTrigger className="w-32">
-                                                <SelectValue placeholder="Select" />
-                                             </SelectTrigger>
-                                             <SelectContent>
-                                                <SelectItem value="present">
-                                                   Present
-                                                </SelectItem>
-                                                <SelectItem value="absent">
-                                                   Absent
-                                                </SelectItem>
-                                                <SelectItem value="late">
-                                                   Late
-                                                </SelectItem>
-                                             </SelectContent>
-                                          </Select>
+                                          <div className="flex space-x-2">
+                                             <Button
+                                                size="sm"
+                                                variant={
+                                                   attendanceData[
+                                                      student.id
+                                                   ] === "present"
+                                                      ? "default"
+                                                      : "outline"
+                                                }
+                                                className={`${
+                                                   attendanceData[
+                                                      student.id
+                                                   ] === "present"
+                                                      ? "bg-green-500 hover:bg-green-600 text-white border-green-500"
+                                                      : "border-green-500 text-green-600 hover:bg-green-50"
+                                                }`}
+                                                onClick={() =>
+                                                   handleAttendanceChange(
+                                                      student.id,
+                                                      "present"
+                                                   )
+                                                }
+                                             >
+                                                Present
+                                             </Button>
+                                             <Button
+                                                size="sm"
+                                                variant={
+                                                   attendanceData[
+                                                      student.id
+                                                   ] === "late"
+                                                      ? "default"
+                                                      : "outline"
+                                                }
+                                                className={`${
+                                                   attendanceData[
+                                                      student.id
+                                                   ] === "late"
+                                                      ? "bg-yellow-500 hover:bg-yellow-600 text-white border-yellow-500"
+                                                      : "border-yellow-500 text-yellow-600 hover:bg-yellow-50"
+                                                }`}
+                                                onClick={() =>
+                                                   handleAttendanceChange(
+                                                      student.id,
+                                                      "late"
+                                                   )
+                                                }
+                                             >
+                                                Late
+                                             </Button>
+                                             <Button
+                                                size="sm"
+                                                variant={
+                                                   attendanceData[
+                                                      student.id
+                                                   ] === "absent"
+                                                      ? "default"
+                                                      : "outline"
+                                                }
+                                                className={`${
+                                                   attendanceData[
+                                                      student.id
+                                                   ] === "absent"
+                                                      ? "bg-red-500 hover:bg-red-600 text-white border-red-500"
+                                                      : "border-red-500 text-red-600 hover:bg-red-50"
+                                                }`}
+                                                onClick={() =>
+                                                   handleAttendanceChange(
+                                                      student.id,
+                                                      "absent"
+                                                   )
+                                                }
+                                             >
+                                                Absent
+                                             </Button>
+                                          </div>
+                                       </TableCell>
+                                       <TableCell className="text-right">
+                                          {attendanceData[student.id] ? (
+                                             <span className="inline-flex items-center justify-center rounded-full bg-green-100 px-2.5 py-0.5 text-green-700">
+                                                <svg
+                                                   xmlns="http://www.w3.org/2000/svg"
+                                                   viewBox="0 0 20 20"
+                                                   fill="currentColor"
+                                                   className="mr-1 h-4 w-4"
+                                                >
+                                                   <path
+                                                      fillRule="evenodd"
+                                                      d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z"
+                                                      clipRule="evenodd"
+                                                   />
+                                                </svg>
+                                                Marked
+                                             </span>
+                                          ) : (
+                                             <span className="inline-flex items-center justify-center rounded-full bg-gray-100 px-2.5 py-0.5 text-gray-700">
+                                                Pending
+                                             </span>
+                                          )}
                                        </TableCell>
                                     </TableRow>
                                  ))}
                               </TableBody>
                            </Table>
+
+                           {/* Attendance Summary */}
+                           {students.length > 0 && (
+                              <div className="mt-6 flex justify-between items-center p-4 bg-muted/20 rounded-lg">
+                                 <div className="text-sm">
+                                    <span className="font-medium">
+                                       Summary:{" "}
+                                    </span>
+                                    <span className="text-green-600 font-medium">
+                                       {
+                                          Object.values(attendanceData).filter(
+                                             (status) => status === "present"
+                                          ).length
+                                       }{" "}
+                                       Present
+                                    </span>
+                                    <span className="mx-2">•</span>
+                                    <span className="text-yellow-600 font-medium">
+                                       {
+                                          Object.values(attendanceData).filter(
+                                             (status) => status === "late"
+                                          ).length
+                                       }{" "}
+                                       Late
+                                    </span>
+                                    <span className="mx-2">•</span>
+                                    <span className="text-red-600 font-medium">
+                                       {
+                                          Object.values(attendanceData).filter(
+                                             (status) => status === "absent"
+                                          ).length
+                                       }{" "}
+                                       Absent
+                                    </span>
+                                 </div>
+                                 <div className="text-sm text-muted-foreground flex items-center gap-1">
+                                    {Object.keys(attendanceData).length} of{" "}
+                                    {students.length} students marked
+                                    {Object.keys(attendanceData).length <
+                                       students.length && (
+                                       <RiAlertLine className="text-red-600" />
+                                    )}
+                                 </div>
+                              </div>
+                           )}
                         </div>
                      )}
                   </div>
@@ -511,7 +650,14 @@ export default function SubjectView() {
                      </TableBody>
                   </Table>
                   <div className="mt-4 text-center">
-                     <Link href={`/teacher/subjects/${subjectId}/attendance`}>
+                     <Link
+                        href={`/teacher/subjects/${subjectId}/attendance`}
+                        onClick={() =>
+                           showLoading(
+                              `Loading attendance records for ${subject.name}...`
+                           )
+                        }
+                     >
                         <Button variant="outline" size="sm">
                            View All Attendance Records
                         </Button>

@@ -1,5 +1,6 @@
 "use client";
 
+import { useLoading } from "@/components/loading-overlay";
 import { Button } from "@/components/ui/button";
 import {
    Card,
@@ -15,7 +16,6 @@ import {
    DialogFooter,
    DialogHeader,
    DialogTitle,
-   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -36,7 +36,7 @@ import {
 } from "@/components/ui/table";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { FiArrowLeft, FiFilter, FiPlus } from "react-icons/fi";
+import { FiArrowLeft, FiFilter } from "react-icons/fi";
 import { toast } from "sonner";
 
 interface Subject {
@@ -69,6 +69,7 @@ interface GroupedAttendance {
 export default function TeacherAttendanceView() {
    const params = useParams();
    const router = useRouter();
+   const { hideLoading } = useLoading();
    const subjectId = params.id as string;
 
    const [subject, setSubject] = useState<Subject | null>(null);
@@ -161,7 +162,19 @@ export default function TeacherAttendanceView() {
 
          const attendanceResponse = await fetch(url);
          if (!attendanceResponse.ok) {
-            throw new Error("Failed to fetch attendance records");
+            // Try to get more detailed error information
+            try {
+               const errorData = await attendanceResponse.json();
+               throw new Error(
+                  errorData.error ||
+                     errorData.details ||
+                     "Failed to fetch attendance records"
+               );
+            } catch (parseError) {
+               throw new Error(
+                  `Failed to fetch attendance records: ${attendanceResponse.status}`
+               );
+            }
          }
 
          const data = await attendanceResponse.json();
@@ -196,7 +209,21 @@ export default function TeacherAttendanceView() {
          setGroupedAttendance(sortedGrouped);
       } catch (error) {
          console.error("Error fetching attendance records:", error);
-         toast.error("Failed to load attendance records");
+         console.error("Request parameters:", {
+            subjectId,
+            currentPage,
+            pageSize,
+            filterDate,
+            filterMonth,
+            filterYear,
+         });
+
+         // Show a more detailed error message
+         toast.error(
+            error instanceof Error
+               ? `Failed to load attendance records: ${error.message}`
+               : "Failed to load attendance records"
+         );
       } finally {
          setIsLoadingRecords(false);
       }
@@ -309,19 +336,9 @@ export default function TeacherAttendanceView() {
                size="icon"
                className="mr-2"
                onClick={() => {
-                  // Preserve the 'from' parameter if it exists
-                  const searchParams = new URLSearchParams(
-                     window.location.search
-                  );
-                  const fromParam = searchParams.get("from");
-
-                  if (fromParam) {
-                     router.push(
-                        `/teacher/subjects/${subjectId}?from=${fromParam}`
-                     );
-                  } else {
-                     router.push(`/teacher/subjects/${subjectId}`);
-                  }
+                  // Hide loading first, then navigate back
+                  hideLoading();
+                  router.back();
                }}
             >
                <FiArrowLeft className="h-4 w-4" />
@@ -335,136 +352,148 @@ export default function TeacherAttendanceView() {
                <CardDescription>{subject.streamName}</CardDescription>
             </CardHeader>
             <CardContent>
-               <div className="flex justify-between items-center">
-                  <div className="flex flex-wrap items-center gap-4">
-                     <div className="flex items-center space-x-2">
-                        <FiFilter className="text-muted-foreground" />
-                        <div className="text-sm font-medium">Date:</div>
-                        <Input
-                           type="date"
-                           value={filterDate}
-                           onChange={(e) =>
-                              handleDateFilterChange(e.target.value)
-                           }
-                           className="w-40"
-                        />
-                        <Button
-                           variant="outline"
-                           size="sm"
-                           onClick={() => {
-                              const today = new Date()
-                                 .toISOString()
-                                 .split("T")[0];
-                              handleDateFilterChange(today);
-                           }}
-                        >
-                           Today
-                        </Button>
-                     </div>
-
-                     <div className="flex items-center space-x-2">
-                        <div className="text-sm font-medium">Month/Year:</div>
-                        <select
-                           className="h-9 rounded-md border border-input px-3 py-1"
-                           value={filterMonth}
-                           onChange={(e) => {
-                              if (filterYear) {
-                                 handleMonthYearFilterChange(
-                                    e.target.value,
-                                    filterYear
-                                 );
-                              } else {
-                                 setFilterMonth(e.target.value);
-                              }
-                           }}
-                        >
-                           <option value="">Select Month</option>
-                           <option value="1">January</option>
-                           <option value="2">February</option>
-                           <option value="3">March</option>
-                           <option value="4">April</option>
-                           <option value="5">May</option>
-                           <option value="6">June</option>
-                           <option value="7">July</option>
-                           <option value="8">August</option>
-                           <option value="9">September</option>
-                           <option value="10">October</option>
-                           <option value="11">November</option>
-                           <option value="12">December</option>
-                        </select>
-
-                        <select
-                           className="h-9 rounded-md border border-input px-3 py-1"
-                           value={filterYear}
-                           onChange={(e) => {
-                              if (filterMonth) {
-                                 handleMonthYearFilterChange(
-                                    filterMonth,
-                                    e.target.value
-                                 );
-                              } else {
-                                 handleYearFilterChange(e.target.value);
-                              }
-                           }}
-                        >
-                           <option value="">Select Year</option>
-                           {Array.from(
-                              { length: 5 },
-                              (_, i) => new Date().getFullYear() - i
-                           ).map((year) => (
-                              <option key={year} value={year}>
-                                 {year}
-                              </option>
-                           ))}
-                        </select>
-
-                        <Button
-                           variant="outline"
-                           size="sm"
-                           onClick={() => {
-                              const today = new Date();
-                              handleMonthYearFilterChange(
-                                 String(today.getMonth() + 1),
-                                 String(today.getFullYear())
-                              );
-                           }}
-                        >
-                           Current Month
-                        </Button>
-                     </div>
-
-                     {(filterDate || filterMonth || filterYear) && (
-                        <Button
-                           variant="outline"
-                           size="sm"
-                           onClick={() => {
-                              setFilterDate("");
-                              setFilterMonth("");
-                              setFilterYear("");
-                              setCurrentPage(1);
-                           }}
-                        >
-                           Clear Filters
-                        </Button>
-                     )}
-
-                     {totalRecords > 0 && (
-                        <div className="text-sm text-muted-foreground ml-auto">
-                           Showing {totalRecords} records
+               <div className="flex flex-col gap-4">
+                  <div className="flex flex-col gap-4">
+                     {/* Date Filter - Responsive */}
+                     <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+                        <div className="flex items-center gap-2">
+                           <FiFilter className="text-muted-foreground flex-shrink-0" />
+                           <div className="text-sm font-medium">Date:</div>
                         </div>
-                     )}
+                        <div className="flex flex-1 flex-wrap gap-2">
+                           <Input
+                              type="date"
+                              value={filterDate}
+                              onChange={(e) =>
+                                 handleDateFilterChange(e.target.value)
+                              }
+                              className="w-full sm:w-40"
+                           />
+                           <Button
+                              variant="outline"
+                              size="sm"
+                              className="w-full sm:w-auto"
+                              onClick={() => {
+                                 const today = new Date()
+                                    .toISOString()
+                                    .split("T")[0];
+                                 handleDateFilterChange(today);
+                              }}
+                           >
+                              Today
+                           </Button>
+                        </div>
+                     </div>
+
+                     {/* Month/Year Filter - Responsive */}
+                     <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+                        <div className="flex items-center gap-2">
+                           <div className="text-sm font-medium ml-6 sm:ml-0">
+                              Month/Year:
+                           </div>
+                        </div>
+                        <div className="flex flex-1 flex-wrap gap-2">
+                           <select
+                              className="h-9 rounded-md border border-input px-3 py-1 w-full sm:w-auto"
+                              value={filterMonth}
+                              onChange={(e) => {
+                                 if (filterYear) {
+                                    handleMonthYearFilterChange(
+                                       e.target.value,
+                                       filterYear
+                                    );
+                                 } else {
+                                    setFilterMonth(e.target.value);
+                                 }
+                              }}
+                           >
+                              <option value="">Select Month</option>
+                              <option value="1">January</option>
+                              <option value="2">February</option>
+                              <option value="3">March</option>
+                              <option value="4">April</option>
+                              <option value="5">May</option>
+                              <option value="6">June</option>
+                              <option value="7">July</option>
+                              <option value="8">August</option>
+                              <option value="9">September</option>
+                              <option value="10">October</option>
+                              <option value="11">November</option>
+                              <option value="12">December</option>
+                           </select>
+
+                           <select
+                              className="h-9 rounded-md border border-input px-3 py-1 w-full sm:w-auto"
+                              value={filterYear}
+                              onChange={(e) => {
+                                 if (filterMonth) {
+                                    handleMonthYearFilterChange(
+                                       filterMonth,
+                                       e.target.value
+                                    );
+                                 } else {
+                                    handleYearFilterChange(e.target.value);
+                                 }
+                              }}
+                           >
+                              <option value="">Select Year</option>
+                              {Array.from(
+                                 { length: 5 },
+                                 (_, i) => new Date().getFullYear() - i
+                              ).map((year) => (
+                                 <option key={year} value={year}>
+                                    {year}
+                                 </option>
+                              ))}
+                           </select>
+
+                           <Button
+                              variant="outline"
+                              size="sm"
+                              className="w-full sm:w-auto"
+                              onClick={() => {
+                                 const today = new Date();
+                                 handleMonthYearFilterChange(
+                                    String(today.getMonth() + 1),
+                                    String(today.getFullYear())
+                                 );
+                              }}
+                           >
+                              Current Month
+                           </Button>
+                        </div>
+                     </div>
+
+                     {/* Action Buttons - Responsive */}
+                     <div className="flex flex-wrap gap-2 justify-between items-center">
+                        {(filterDate || filterMonth || filterYear) && (
+                           <Button
+                              variant="outline"
+                              size="sm"
+                              className="w-full sm:w-auto"
+                              onClick={() => {
+                                 setFilterDate("");
+                                 setFilterMonth("");
+                                 setFilterYear("");
+                                 setCurrentPage(1);
+                              }}
+                           >
+                              Clear Filters
+                           </Button>
+                        )}
+
+                        {totalRecords > 0 && (
+                           <div className="text-sm text-muted-foreground w-full sm:w-auto text-center sm:text-right sm:ml-auto">
+                              Showing {totalRecords} records
+                           </div>
+                        )}
+                     </div>
                   </div>
 
                   <Dialog
                      open={isAddingAttendance}
                      onOpenChange={setIsAddingAttendance}
                   >
-                     <DialogTrigger asChild>
-                        <Button>
-                           <FiPlus className="mr-2" />
-                           Take Attendance
-                        </Button>
-                     </DialogTrigger>
                      <DialogContent className="max-w-3xl">
                         <DialogHeader>
                            <DialogTitle>Take Attendance</DialogTitle>
@@ -577,13 +606,10 @@ export default function TeacherAttendanceView() {
             </div>
          ) : attendanceRecords.length === 0 ? (
             <div className="text-center py-10 bg-muted/20 rounded-lg">
-               <p className="text-muted-foreground mb-4">
-                  No attendance records found
+               <p className="text-muted-foreground">
+                  No attendance records found. Attendance can be taken from the
+                  subject page.
                </p>
-               <Button onClick={() => setIsAddingAttendance(true)}>
-                  <FiPlus className="mr-2" />
-                  Take First Attendance
-               </Button>
             </div>
          ) : (
             <>
@@ -593,12 +619,12 @@ export default function TeacherAttendanceView() {
                      <CardTitle>Attendance Summary</CardTitle>
                   </CardHeader>
                   <CardContent>
-                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                           <div className="text-green-600 font-medium text-lg">
+                     <div className="grid grid-cols-3 gap-2 sm:gap-4">
+                        <div className="bg-green-50 dark:bg-green-950/30 p-2 sm:p-4 rounded-lg border border-green-200 dark:border-green-800">
+                           <div className="text-green-600 dark:text-green-400 font-medium text-sm sm:text-lg text-center sm:text-left">
                               Present
                            </div>
-                           <div className="text-2xl font-bold mt-1">
+                           <div className="text-xl sm:text-2xl font-bold mt-1 text-green-600 dark:text-green-400 text-center sm:text-left">
                               {
                                  attendanceRecords.filter(
                                     (r) => r.status === "present"
@@ -606,11 +632,11 @@ export default function TeacherAttendanceView() {
                               }
                            </div>
                         </div>
-                        <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-                           <div className="text-yellow-600 font-medium text-lg">
+                        <div className="bg-yellow-50 dark:bg-yellow-950/30 p-2 sm:p-4 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                           <div className="text-yellow-600 dark:text-yellow-400 font-medium text-sm sm:text-lg text-center sm:text-left">
                               Late
                            </div>
-                           <div className="text-2xl font-bold mt-1">
+                           <div className="text-xl sm:text-2xl font-bold mt-1 text-yellow-600 dark:text-yellow-400 text-center sm:text-left">
                               {
                                  attendanceRecords.filter(
                                     (r) => r.status === "late"
@@ -618,11 +644,11 @@ export default function TeacherAttendanceView() {
                               }
                            </div>
                         </div>
-                        <div className="bg-red-50 p-4 rounded-lg border border-red-200">
-                           <div className="text-red-600 font-medium text-lg">
+                        <div className="bg-red-50 dark:bg-red-950/30 p-2 sm:p-4 rounded-lg border border-red-200 dark:border-red-800">
+                           <div className="text-red-600 dark:text-red-400 font-medium text-sm sm:text-lg text-center sm:text-left">
                               Absent
                            </div>
-                           <div className="text-2xl font-bold mt-1">
+                           <div className="text-xl sm:text-2xl font-bold mt-1 text-red-600 dark:text-red-400 text-center sm:text-left">
                               {
                                  attendanceRecords.filter(
                                     (r) => r.status === "absent"
@@ -636,17 +662,18 @@ export default function TeacherAttendanceView() {
 
                {/* Attendance Records Grouped by Date */}
                <div className="space-y-6">
-                  <div className="flex justify-between items-center">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                      <h2 className="text-xl font-semibold">
                         Attendance Records
                      </h2>
 
                      {/* Pagination Controls */}
                      {totalPages > 1 && (
-                        <div className="flex items-center space-x-2">
+                        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                            <Button
                               variant="outline"
                               size="sm"
+                              className="flex-1 sm:flex-none"
                               onClick={() => handlePageChange(1)}
                               disabled={currentPage === 1}
                            >
@@ -655,17 +682,19 @@ export default function TeacherAttendanceView() {
                            <Button
                               variant="outline"
                               size="sm"
+                              className="flex-1 sm:flex-none"
                               onClick={() => handlePageChange(currentPage - 1)}
                               disabled={currentPage === 1}
                            >
                               Previous
                            </Button>
-                           <span className="text-sm">
+                           <span className="text-sm text-center w-full sm:w-auto sm:px-2">
                               Page {currentPage} of {totalPages}
                            </span>
                            <Button
                               variant="outline"
                               size="sm"
+                              className="flex-1 sm:flex-none"
                               onClick={() => handlePageChange(currentPage + 1)}
                               disabled={currentPage === totalPages}
                            >
@@ -674,6 +703,7 @@ export default function TeacherAttendanceView() {
                            <Button
                               variant="outline"
                               size="sm"
+                              className="flex-1 sm:flex-none"
                               onClick={() => handlePageChange(totalPages)}
                               disabled={currentPage === totalPages}
                            >
@@ -711,7 +741,9 @@ export default function TeacherAttendanceView() {
                   {Object.keys(groupedAttendance).length === 0 ? (
                      <div className="text-center py-6 bg-muted/20 rounded-lg">
                         <p className="text-muted-foreground">
-                           No attendance records found for the selected filters
+                           No attendance records found for the selected filters.
+                           Try adjusting your filters or go to the subject page
+                           to take attendance.
                         </p>
                      </div>
                   ) : (
@@ -787,10 +819,11 @@ export default function TeacherAttendanceView() {
 
                   {/* Bottom Pagination Controls */}
                   {totalPages > 1 && (
-                     <div className="flex items-center justify-center space-x-2 mt-4">
+                     <div className="flex flex-wrap items-center justify-center gap-2 mt-4">
                         <Button
                            variant="outline"
                            size="sm"
+                           className="flex-1 sm:flex-none max-w-[100px]"
                            onClick={() => handlePageChange(1)}
                            disabled={currentPage === 1}
                         >
@@ -799,17 +832,19 @@ export default function TeacherAttendanceView() {
                         <Button
                            variant="outline"
                            size="sm"
+                           className="flex-1 sm:flex-none max-w-[100px]"
                            onClick={() => handlePageChange(currentPage - 1)}
                            disabled={currentPage === 1}
                         >
                            Previous
                         </Button>
-                        <span className="text-sm">
+                        <span className="text-sm text-center w-full sm:w-auto sm:px-2">
                            Page {currentPage} of {totalPages}
                         </span>
                         <Button
                            variant="outline"
                            size="sm"
+                           className="flex-1 sm:flex-none max-w-[100px]"
                            onClick={() => handlePageChange(currentPage + 1)}
                            disabled={currentPage === totalPages}
                         >
@@ -818,6 +853,7 @@ export default function TeacherAttendanceView() {
                         <Button
                            variant="outline"
                            size="sm"
+                           className="flex-1 sm:flex-none max-w-[100px]"
                            onClick={() => handlePageChange(totalPages)}
                            disabled={currentPage === totalPages}
                         >

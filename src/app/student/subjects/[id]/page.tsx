@@ -1,8 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-import Link from "next/link";
+import { useLoading } from "@/components/loading-overlay";
 import { Button } from "@/components/ui/button";
 import {
    Card,
@@ -19,6 +17,9 @@ import {
    TableHeader,
    TableRow,
 } from "@/components/ui/table";
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { FiArrowLeft, FiCalendar } from "react-icons/fi";
 import { toast } from "sonner";
 
@@ -49,6 +50,7 @@ export default function StudentSubjectView() {
    const params = useParams();
    const router = useRouter();
    const subjectId = params.id as string;
+   const { showLoading, hideLoading } = useLoading();
 
    const [subject, setSubject] = useState<Subject | null>(null);
    const [attendanceRecords, setAttendanceRecords] = useState<
@@ -60,6 +62,9 @@ export default function StudentSubjectView() {
 
    useEffect(() => {
       const fetchSubjectDetails = async () => {
+         setIsLoading(true);
+         showLoading(`Loading subject details...`);
+
          try {
             // Fetch subject details
             const subjectResponse = await fetch(
@@ -77,6 +82,10 @@ export default function StudentSubjectView() {
             const subjectData = await subjectResponse.json();
             setSubject(subjectData);
 
+            showLoading(
+               `Loading attendance records for ${subjectData.name}...`
+            );
+
             // Fetch attendance records
             const attendanceResponse = await fetch(
                `/api/student/subjects/${subjectId}/attendance?limit=5`
@@ -93,10 +102,12 @@ export default function StudentSubjectView() {
             toast.error("Failed to load subject details");
          } finally {
             setIsLoading(false);
+            hideLoading();
          }
       };
 
       fetchSubjectDetails();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
    }, [subjectId, router]);
 
    if (isLoading) {
@@ -116,9 +127,11 @@ export default function StudentSubjectView() {
                variant="ghost"
                size="icon"
                className="mr-2"
-               onClick={() =>
-                  router.push(`/student/streams/${subject.stream_id}`)
-               }
+               onClick={() => {
+                  // Hide loading first, then navigate back
+                  hideLoading();
+                  router.back();
+               }}
             >
                <FiArrowLeft className="h-4 w-4" />
             </Button>
@@ -228,10 +241,10 @@ export default function StudentSubjectView() {
                                  <span
                                     className={
                                        record.status === "present"
-                                          ? "text-green-600 font-medium"
+                                          ? "text-green-600 dark:text-green-400 font-medium"
                                           : record.status === "late"
-                                          ? "text-yellow-600 font-medium"
-                                          : "text-red-600 font-medium"
+                                          ? "text-yellow-600 dark:text-yellow-400 font-medium"
+                                          : "text-red-600 dark:text-red-400 font-medium"
                                     }
                                  >
                                     {record.status.charAt(0).toUpperCase() +

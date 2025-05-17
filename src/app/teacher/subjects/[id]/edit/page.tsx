@@ -1,5 +1,6 @@
 "use client";
 
+import { useLoading } from "@/components/loading-overlay";
 import { Button } from "@/components/ui/button";
 import {
    Card,
@@ -28,6 +29,7 @@ interface SubjectData {
 export default function EditSubject() {
    const params = useParams();
    const router = useRouter();
+   const { hideLoading } = useLoading();
    const subjectId = params.id as string;
    const searchParams = new URLSearchParams(
       typeof window !== "undefined" ? window.location.search : ""
@@ -120,11 +122,9 @@ export default function EditSubject() {
                size="icon"
                className="mr-2"
                onClick={() => {
-                  if (fromStream) {
-                     router.push(`/teacher/subjects/${subjectId}?from=stream`);
-                  } else {
-                     router.push(`/teacher/subjects/${subjectId}`);
-                  }
+                  // Hide loading first, then navigate back
+                  hideLoading();
+                  router.back();
                }}
             >
                <FiArrowLeft className="h-4 w-4" />
@@ -133,7 +133,7 @@ export default function EditSubject() {
          </div>
 
          <Card>
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} className="flex flex-col gap-6">
                <CardHeader>
                   <CardTitle>Subject Details</CardTitle>
                   <CardDescription>
@@ -169,13 +169,9 @@ export default function EditSubject() {
                      type="button"
                      variant="outline"
                      onClick={() => {
-                        if (fromStream) {
-                           router.push(
-                              `/teacher/subjects/${subjectId}?from=stream`
-                           );
-                        } else {
-                           router.push(`/teacher/subjects/${subjectId}`);
-                        }
+                        // Hide loading first, then navigate back
+                        hideLoading();
+                        router.back();
                      }}
                   >
                      Cancel

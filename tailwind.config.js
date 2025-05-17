@@ -66,12 +66,28 @@ module.exports = {
                from: { height: "var(--radix-accordion-content-height)" },
                to: { height: "0" },
             },
+            fadeIn: {
+               "0%": { opacity: "0" },
+               "100%": { opacity: "1" },
+            },
+            scaleIn: {
+               "0%": { transform: "scale(0.9)", opacity: "0" },
+               "100%": { transform: "scale(1)", opacity: "1" },
+            },
+            progressBar: {
+               "0%": { width: "0%" },
+               "50%": { width: "70%" },
+               "100%": { width: "100%" },
+            },
          },
          animation: {
             "accordion-down": "accordion-down 0.2s ease-out",
             "accordion-up": "accordion-up 0.2s ease-out",
+            fadeIn: "fadeIn 0.3s ease-out",
+            scaleIn: "scaleIn 0.4s ease-out",
+            progressBar: "progressBar 2s ease-in-out infinite",
          },
       },
    },
-   plugins: [],
+   plugins: [require("tailwindcss-animate")],
 };

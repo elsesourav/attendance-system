@@ -1,10 +1,21 @@
 "use client";
 
+import { useLoading } from "@/components/loading-overlay";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { FiBook, FiBookOpen, FiHome, FiLogOut, FiUsers } from "react-icons/fi";
+import { useEffect, useState } from "react";
+import {
+   FiBook,
+   FiBookOpen,
+   FiHome,
+   FiLogOut,
+   FiMenu,
+   FiUsers,
+   FiX,
+} from "react-icons/fi";
 
 export default function TeacherLayout({
    children,
@@ -12,6 +23,20 @@ export default function TeacherLayout({
    children: React.ReactNode;
 }) {
    const { data: session, status } = useSession();
+   const { showLoading } = useLoading();
+   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+   // Close sidebar when screen size changes to larger than mobile
+   useEffect(() => {
+      const handleResize = () => {
+         if (window.innerWidth >= 1024) {
+            setIsSidebarOpen(false);
+         }
+      };
+
+      window.addEventListener("resize", handleResize);
+      return () => window.removeEventListener("resize", handleResize);
+   }, []);
 
    if (status === "loading") {
       return (
@@ -26,58 +51,168 @@ export default function TeacherLayout({
    }
 
    return (
-      <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
-         {/* Sidebar */}
-         <div className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700">
-            <div className="p-6">
+      <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900">
+         {/* Mobile Header */}
+         <div className="lg:hidden flex items-center justify-between p-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-30">
+            <div className="flex items-center">
+               <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                  className="mr-2"
+               >
+                  {isSidebarOpen ? <FiX /> : <FiMenu />}
+               </Button>
                <h2 className="text-xl font-bold">Teacher Dashboard</h2>
-               <p className="text-sm text-gray-500 mt-1">
-                  {session?.user?.name}
-               </p>
             </div>
-            <nav className="mt-6">
-               <div className="px-4 space-y-2">
-                  <Link href="/teacher/dashboard" className="block">
-                     <Button variant="ghost" className="w-full justify-start">
-                        <FiHome className="mr-2" />
-                        Dashboard
-                     </Button>
-                  </Link>
-                  <Link href="/teacher/streams" className="block">
-                     <Button variant="ghost" className="w-full justify-start">
-                        <FiBook className="mr-2" />
-                        Streams
-                     </Button>
-                  </Link>
-                  <Link href="/teacher/students" className="block">
-                     <Button variant="ghost" className="w-full justify-start">
-                        <FiUsers className="mr-2" />
-                        Students
-                     </Button>
-                  </Link>
-                  <Link href="/teacher/subjects" className="block">
-                     <Button variant="ghost" className="w-full justify-start">
-                        <FiBookOpen className="mr-2" />
-                        Subjects
-                     </Button>
-                  </Link>
-               </div>
-               <div className="px-4 mt-auto pt-6">
-                  <Button
-                     variant="ghost"
-                     className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
-                     onClick={() => signOut({ callbackUrl: "/login" })}
-                  >
-                     <FiLogOut className="mr-2" />
-                     Logout
-                  </Button>
-               </div>
-            </nav>
+            <div className="flex items-center space-x-2">
+               <ThemeToggle />
+            </div>
          </div>
 
-         {/* Main content */}
-         <div className="flex-1 overflow-auto">
-            <main className="p-6">{children}</main>
+         <div className="relative flex flex-1 overflow-hidden">
+            {/* Sidebar - hidden on mobile unless toggled */}
+            <div
+               className={`
+                  fixed lg:static top-0 left-0 z-50 h-screen w-64
+                  bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700
+                  transition-transform duration-300 ease-in-out
+                  flex flex-col overflow-y-auto
+                  ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}
+                  lg:translate-x-0
+               `}
+            >
+               {/* Sidebar Header - visible only on desktop */}
+               <div className="hidden lg:block p-6">
+                  <div className="flex justify-between items-center">
+                     <div>
+                        <h2 className="text-xl font-bold">Teacher Dashboard</h2>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                           {session?.user?.name}
+                        </p>
+                     </div>
+                     <ThemeToggle />
+                  </div>
+               </div>
+
+               {/* Mobile Sidebar Header - with close button */}
+               <div className="lg:hidden p-4 flex justify-between items-center border-b border-gray-200 dark:border-gray-700">
+                  <div>
+                     <h2 className="text-lg font-bold">Menu</h2>
+                     <p className="text-sm text-gray-500 dark:text-gray-400">
+                        {session?.user?.name}
+                     </p>
+                  </div>
+                  <Button
+                     variant="ghost"
+                     size="icon"
+                     onClick={() => setIsSidebarOpen(false)}
+                  >
+                     <FiX />
+                  </Button>
+               </div>
+
+               <nav className="mt-6 flex-1">
+                  <div className="px-4 space-y-2">
+                     <Link
+                        href="/teacher/dashboard"
+                        className="block"
+                        onClick={() => {
+                           showLoading("Loading dashboard...");
+                           setIsSidebarOpen(false);
+                        }}
+                     >
+                        <Button
+                           variant="ghost"
+                           className="w-full justify-start"
+                        >
+                           <FiHome className="mr-2" />
+                           Dashboard
+                        </Button>
+                     </Link>
+                     <Link
+                        href="/teacher/streams"
+                        className="block"
+                        onClick={() => {
+                           showLoading("Loading streams...");
+                           setIsSidebarOpen(false);
+                        }}
+                     >
+                        <Button
+                           variant="ghost"
+                           className="w-full justify-start"
+                        >
+                           <FiBook className="mr-2" />
+                           Streams
+                        </Button>
+                     </Link>
+                     <Link
+                        href="/teacher/students"
+                        className="block"
+                        onClick={() => {
+                           showLoading("Loading students...");
+                           setIsSidebarOpen(false);
+                        }}
+                     >
+                        <Button
+                           variant="ghost"
+                           className="w-full justify-start"
+                        >
+                           <FiUsers className="mr-2" />
+                           Students
+                        </Button>
+                     </Link>
+                     <Link
+                        href="/teacher/subjects"
+                        className="block"
+                        onClick={() => {
+                           showLoading("Loading subjects...");
+                           setIsSidebarOpen(false);
+                        }}
+                     >
+                        <Button
+                           variant="ghost"
+                           className="w-full justify-start"
+                        >
+                           <FiBookOpen className="mr-2" />
+                           Subjects
+                        </Button>
+                     </Link>
+                  </div>
+                  <div className="px-4 mt-auto pt-6">
+                     <Button
+                        variant="ghost"
+                        className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                        onClick={() => {
+                           showLoading("Logging out...");
+                           signOut({ callbackUrl: "/login" });
+                        }}
+                     >
+                        <FiLogOut className="mr-2" />
+                        Logout
+                     </Button>
+                  </div>
+               </nav>
+            </div>
+
+            {/* Overlay for mobile when sidebar is open */}
+            <div
+               className={`
+                  fixed inset-0 bg-black z-40 lg:hidden
+                  transition-opacity duration-300 ease-in-out
+                  ${
+                     isSidebarOpen
+                        ? "opacity-50 pointer-events-auto"
+                        : "opacity-0 pointer-events-none"
+                  }
+               `}
+               onClick={() => setIsSidebarOpen(false)}
+            />
+
+            {/* Main content */}
+            <div className="flex-1 overflow-auto w-full">
+               <main className="p-4 md:p-6 pb-20">{children}</main>
+            </div>
          </div>
       </div>
    );

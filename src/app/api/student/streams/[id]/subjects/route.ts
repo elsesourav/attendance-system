@@ -16,6 +16,13 @@ export async function GET(
 
       const { id } = await params;
 
+      if (!id || id === "undefined") {
+         return NextResponse.json(
+            { error: "Stream ID is required" },
+            { status: 400 }
+         );
+      }
+
       const studentId = session.user.id;
       const streamId = parseInt(id);
 

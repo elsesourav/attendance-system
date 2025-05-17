@@ -1,5 +1,7 @@
 "use client";
 
+import { DeleteConfirmation } from "@/components/delete-confirmation";
+import { useLoading } from "@/components/loading-overlay";
 import { Button } from "@/components/ui/button";
 import {
    Card,
@@ -49,7 +51,13 @@ interface Student {
 export default function ManageSubjectStudents() {
    const params = useParams();
    const router = useRouter();
+   const { hideLoading } = useLoading();
    const subjectId = params.id as string;
+
+   // Hide loading overlay when component mounts
+   useEffect(() => {
+      hideLoading();
+   }, [hideLoading]);
 
    const [subject, setSubject] = useState<Subject | null>(null);
    const [enrolledStudents, setEnrolledStudents] = useState<Student[]>([]);
@@ -58,6 +66,10 @@ export default function ManageSubjectStudents() {
    const [isAddingStudent, setIsAddingStudent] = useState(false);
    const [searchTerm, setSearchTerm] = useState("");
    const [filteredStudents, setFilteredStudents] = useState<Student[]>([]);
+   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+   const [studentToUnenroll, setStudentToUnenroll] = useState<number | null>(
+      null
+   );
 
    useEffect(() => {
       const fetchSubjectAndStudents = async () => {
@@ -162,18 +174,17 @@ export default function ManageSubjectStudents() {
       }
    };
 
-   const handleUnenrollStudent = async (studentId: number) => {
-      if (
-         !confirm(
-            "Are you sure you want to remove this student from the subject?"
-         )
-      ) {
-         return;
-      }
+   const openDeleteDialog = (studentId: number) => {
+      setStudentToUnenroll(studentId);
+      setDeleteDialogOpen(true);
+   };
+
+   const handleUnenrollStudent = async () => {
+      if (!studentToUnenroll) return;
 
       try {
          const response = await fetch(
-            `/api/teacher/subjects/${subjectId}/students/${studentId}`,
+            `/api/teacher/subjects/${subjectId}/students/${studentToUnenroll}`,
             {
                method: "DELETE",
             }
@@ -181,11 +192,13 @@ export default function ManageSubjectStudents() {
 
          if (response.ok) {
             // Find the student in enrolled students
-            const student = enrolledStudents.find((s) => s.id === studentId);
+            const student = enrolledStudents.find(
+               (s) => s.id === studentToUnenroll
+            );
             if (student) {
                // Remove from enrolled students
                setEnrolledStudents(
-                  enrolledStudents.filter((s) => s.id !== studentId)
+                  enrolledStudents.filter((s) => s.id !== studentToUnenroll)
                );
                // Add to available students
                setAvailableStudents([...availableStudents, student]);
@@ -199,6 +212,9 @@ export default function ManageSubjectStudents() {
       } catch (error) {
          console.error("Error removing student:", error);
          toast.error("An error occurred while removing the student");
+      } finally {
+         setDeleteDialogOpen(false);
+         setStudentToUnenroll(null);
       }
    };
 
@@ -218,19 +234,9 @@ export default function ManageSubjectStudents() {
                size="icon"
                className="mr-2"
                onClick={() => {
-                  // Preserve the 'from' parameter if it exists
-                  const searchParams = new URLSearchParams(
-                     window.location.search
-                  );
-                  const fromParam = searchParams.get("from");
-
-                  if (fromParam) {
-                     router.push(
-                        `/teacher/subjects/${subjectId}?from=${fromParam}`
-                     );
-                  } else {
-                     router.push(`/teacher/subjects/${subjectId}`);
-                  }
+                  // Hide loading first, then navigate back
+                  hideLoading();
+                  router.back();
                }}
             >
                <FiArrowLeft className="h-4 w-4" />
@@ -386,7 +392,7 @@ export default function ManageSubjectStudents() {
                                        size="icon"
                                        className="text-red-500 hover:text-red-600"
                                        onClick={() =>
-                                          handleUnenrollStudent(student.id)
+                                          openDeleteDialog(student.id)
                                        }
                                     >
                                        <FiTrash2 className="h-4 w-4" />
@@ -400,6 +406,14 @@ export default function ManageSubjectStudents() {
                </div>
             </CardContent>
          </Card>
+
+         <DeleteConfirmation
+            isOpen={deleteDialogOpen}
+            onClose={() => setDeleteDialogOpen(false)}
+            onConfirm={handleUnenrollStudent}
+            title="Remove Student"
+            description="Are you sure you want to remove this student from the subject? They will no longer have access to this subject's materials or attendance."
+         />
       </div>
    );
 }

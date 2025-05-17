@@ -10,6 +10,14 @@ export async function GET(
    req: NextRequest,
    { params }: { params: { id: string } }
 ) {
+   // Define variables at the top level of the try block so they're available in the catch block
+   let subjectId: number = 0;
+   let page: number = 1;
+   let pageSize: number = 50;
+   let date: string | null = null;
+   let month: string | null = null;
+   let year: string | null = null;
+
    try {
       const session = await getServerSession(authOptions);
 
@@ -18,19 +26,19 @@ export async function GET(
       }
 
       const teacherId = session.user.id;
-      // Convert params.id to number after ensuring it's available
+      // Convert params.id to number
       const { id } = await params;
-      const subjectId = parseInt(id);
+      subjectId = parseInt(id);
       const url = new URL(req.url);
-      const page = url.searchParams.get("page")
+      page = url.searchParams.get("page")
          ? parseInt(url.searchParams.get("page")!)
          : 1;
-      const pageSize = url.searchParams.get("pageSize")
+      pageSize = url.searchParams.get("pageSize")
          ? parseInt(url.searchParams.get("pageSize")!)
          : 50;
-      const date = url.searchParams.get("date");
-      const month = url.searchParams.get("month");
-      const year = url.searchParams.get("year");
+      date = url.searchParams.get("date");
+      month = url.searchParams.get("month");
+      year = url.searchParams.get("year");
 
       // Get subject details
       const subject = await getSubjectById(subjectId);
@@ -72,17 +80,37 @@ export async function GET(
       // Filter by month and year if provided
       else if (month && year) {
          query += " AND MONTH(a.date) = ? AND YEAR(a.date) = ?";
-         queryParams.push(month, year);
+         queryParams.push(parseInt(month), parseInt(year));
       }
       // Filter by year only if provided
       else if (year) {
          query += " AND YEAR(a.date) = ?";
-         queryParams.push(year);
+         queryParams.push(parseInt(year));
       }
 
       // Get total count for pagination
-      const countQuery = `SELECT COUNT(*) as total FROM (${query}) as subquery`;
-      const countResult = (await executeQuery(countQuery, queryParams)) as [
+      let countQuery = `
+         SELECT COUNT(*) as total
+         FROM attendance a
+         JOIN students s ON a.student_id = s.id
+         WHERE a.subject_id = ?
+      `;
+
+      const countParams: any[] = [subjectId];
+
+      // Add the same filters to the count query
+      if (date) {
+         countQuery += " AND a.date = ?";
+         countParams.push(date);
+      } else if (month && year) {
+         countQuery += " AND MONTH(a.date) = ? AND YEAR(a.date) = ?";
+         countParams.push(parseInt(month), parseInt(year));
+      } else if (year) {
+         countQuery += " AND YEAR(a.date) = ?";
+         countParams.push(parseInt(year));
+      }
+
+      const countResult = (await executeQuery(countQuery, countParams)) as [
          { total: number }
       ];
       const total = countResult[0].total;
@@ -109,8 +137,19 @@ export async function GET(
       });
    } catch (error) {
       console.error("Error fetching attendance records:", error);
+      console.error("Request parameters:", {
+         subjectId,
+         page,
+         pageSize,
+         date,
+         month,
+         year,
+      });
       return NextResponse.json(
-         { error: "Failed to fetch attendance records" },
+         {
+            error: "Failed to fetch attendance records",
+            details: error instanceof Error ? error.message : String(error),
+         },
          { status: 500 }
       );
    }
@@ -128,8 +167,8 @@ export async function POST(
       }
 
       const teacherId = session.user.id;
-      // Convert params.id to number after ensuring it's available
-      const { id } = params;
+      // Convert params.id to number
+      const { id } = await params;
       const subjectId = parseInt(id);
       const { date, records } = await req.json();
 
@@ -181,7 +220,10 @@ export async function POST(
    } catch (error) {
       console.error("Error marking attendance:", error);
       return NextResponse.json(
-         { error: "Failed to mark attendance" },
+         {
+            error: "Failed to mark attendance",
+            details: error instanceof Error ? error.message : String(error),
+         },
          { status: 500 }
       );
    }

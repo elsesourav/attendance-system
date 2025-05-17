@@ -1,5 +1,6 @@
 "use client";
 
+import { useLoading } from "@/components/loading-overlay";
 import { Button } from "@/components/ui/button";
 import {
    Card,
@@ -20,6 +21,7 @@ import { toast } from "sonner";
 export default function LoginPage() {
    const router = useRouter();
    const [isLoading, setIsLoading] = useState(false);
+   const { showLoading, hideLoading } = useLoading();
 
    const handleSubmit = async (
       event: React.FormEvent<HTMLFormElement>,
@@ -27,6 +29,7 @@ export default function LoginPage() {
    ) => {
       event.preventDefault();
       setIsLoading(true);
+      showLoading(`Signing in as ${role}...`); // Show the loading overlay with custom message
 
       const formData = new FormData(event.currentTarget);
       const email = formData.get("email") as string;
@@ -46,6 +49,7 @@ export default function LoginPage() {
             toast.error("Invalid credentials. Please try again.");
          } else {
             toast.success(`Logged in successfully as ${role}`);
+            showLoading(`Welcome back! Redirecting to your dashboard...`);
             router.push(
                role === "teacher" ? "/teacher/dashboard" : "/student/dashboard"
             );
@@ -56,6 +60,7 @@ export default function LoginPage() {
          console.error(error);
       } finally {
          setIsLoading(false);
+         hideLoading(); // Hide the loading overlay
       }
    };
 
@@ -154,25 +159,28 @@ export default function LoginPage() {
                   <div className="flex justify-center space-x-4">
                      <Button
                         variant="outline"
-                        onClick={() => router.push("/register/student")}
+                        onClick={() => {
+                           showLoading(
+                              "Preparing student registration form..."
+                           );
+                           router.push("/register/student");
+                        }}
                      >
                         Register as Student
                      </Button>
                      <Button
                         variant="outline"
-                        onClick={() => router.push("/register/teacher")}
+                        onClick={() => {
+                           showLoading(
+                              "Preparing teacher registration form..."
+                           );
+                           router.push("/register/teacher");
+                        }}
                      >
                         Register as Teacher
                      </Button>
                   </div>
                </div>
-               <p className="text-center text-sm text-gray-500 mt-4">
-                  Sample credentials:
-                  <br />
-                  Teacher: teacher1@example.com / password
-                  <br />
-                  Student: student1@example.com / password
-               </p>
             </CardFooter>
          </Card>
       </div>

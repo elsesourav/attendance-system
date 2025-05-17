@@ -1,5 +1,7 @@
 "use client";
 
+import { DeleteConfirmation } from "@/components/delete-confirmation";
+import { useLoading } from "@/components/loading-overlay";
 import { Button } from "@/components/ui/button";
 import {
    Card,
@@ -44,12 +46,20 @@ interface Subject {
 export default function TeacherStreamView() {
    const params = useParams();
    const router = useRouter();
+   const { showLoading, hideLoading } = useLoading();
    const streamId = params.id as string;
 
    const [stream, setStream] = useState<Stream | null>(null);
    const [subjects, setSubjects] = useState<Subject[]>([]);
    const [isLoading, setIsLoading] = useState(true);
    const [isAddingSubject, setIsAddingSubject] = useState(false);
+   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+   const [subjectToDelete, setSubjectToDelete] = useState<number | null>(null);
+
+   // Hide loading overlay when component mounts
+   useEffect(() => {
+      hideLoading();
+   }, [hideLoading]);
    const [newSubject, setNewSubject] = useState({
       name: "",
       description: "",
@@ -101,6 +111,8 @@ export default function TeacherStreamView() {
          return;
       }
 
+      showLoading("Adding new subject...");
+
       try {
          const response = await fetch(
             `/api/teacher/streams/${streamId}/subjects`,
@@ -126,25 +138,33 @@ export default function TeacherStreamView() {
       } catch (error) {
          console.error("Error adding subject:", error);
          toast.error("An error occurred while adding the subject");
+      } finally {
+         hideLoading();
       }
    };
 
-   const handleDeleteSubject = async (subjectId: number) => {
-      if (
-         !confirm(
-            "Are you sure you want to delete this subject? This will also delete all attendance records associated with it."
-         )
-      ) {
-         return;
-      }
+   const openDeleteDialog = (subjectId: number) => {
+      setSubjectToDelete(subjectId);
+      setDeleteDialogOpen(true);
+   };
+
+   const handleDeleteSubject = async () => {
+      if (!subjectToDelete) return;
+
+      showLoading("Deleting subject...");
 
       try {
-         const response = await fetch(`/api/teacher/subjects/${subjectId}`, {
-            method: "DELETE",
-         });
+         const response = await fetch(
+            `/api/teacher/subjects/${subjectToDelete}`,
+            {
+               method: "DELETE",
+            }
+         );
 
          if (response.ok) {
-            setSubjects(subjects.filter((subject) => subject.id !== subjectId));
+            setSubjects(
+               subjects.filter((subject) => subject.id !== subjectToDelete)
+            );
             toast.success("Subject deleted successfully");
          } else {
             const error = await response.json();
@@ -153,6 +173,10 @@ export default function TeacherStreamView() {
       } catch (error) {
          console.error("Error deleting subject:", error);
          toast.error("An error occurred while deleting the subject");
+      } finally {
+         setDeleteDialogOpen(false);
+         setSubjectToDelete(null);
+         hideLoading();
       }
    };
 
@@ -171,7 +195,11 @@ export default function TeacherStreamView() {
                variant="ghost"
                size="icon"
                className="mr-2"
-               onClick={() => router.push("/teacher/streams")}
+               onClick={() => {
+                  // Hide loading first, then navigate back
+                  hideLoading();
+                  router.back();
+               }}
             >
                <FiArrowLeft className="h-4 w-4" />
             </Button>
@@ -192,7 +220,10 @@ export default function TeacherStreamView() {
                </div>
             </CardContent>
             <CardFooter className="flex justify-end">
-               <Link href={`/teacher/streams/${streamId}/edit`}>
+               <Link
+                  href={`/teacher/streams/${streamId}/edit`}
+                  onClick={() => showLoading("Loading stream edit form...")}
+               >
                   <Button variant="outline">
                      <FiEdit className="mr-2" />
                      Edit Stream
@@ -287,6 +318,11 @@ export default function TeacherStreamView() {
                         <div className="flex justify-between mt-4">
                            <Link
                               href={`/teacher/subjects/${subject.id}/students?from=stream`}
+                              onClick={() =>
+                                 showLoading(
+                                    `Loading students for ${subject.name}...`
+                                 )
+                              }
                            >
                               <Button variant="outline" size="sm">
                                  <FiUsers className="mr-2" />
@@ -295,6 +331,11 @@ export default function TeacherStreamView() {
                            </Link>
                            <Link
                               href={`/teacher/subjects/${subject.id}?from=stream`}
+                              onClick={() =>
+                                 showLoading(
+                                    `Loading ${subject.name} subject...`
+                                 )
+                              }
                            >
                               <Button variant="outline" size="sm">
                                  View
@@ -306,6 +347,11 @@ export default function TeacherStreamView() {
                         <div className="space-x-2">
                            <Link
                               href={`/teacher/subjects/${subject.id}/edit?from=stream`}
+                              onClick={() =>
+                                 showLoading(
+                                    `Loading edit form for ${subject.name}...`
+                                 )
+                              }
                            >
                               <Button variant="outline" size="icon">
                                  <FiEdit className="h-4 w-4" />
@@ -315,7 +361,7 @@ export default function TeacherStreamView() {
                               variant="outline"
                               size="icon"
                               className="text-red-500 hover:text-red-600"
-                              onClick={() => handleDeleteSubject(subject.id)}
+                              onClick={() => openDeleteDialog(subject.id)}
                            >
                               <FiTrash2 className="h-4 w-4" />
                            </Button>
@@ -325,6 +371,14 @@ export default function TeacherStreamView() {
                ))}
             </div>
          )}
+
+         <DeleteConfirmation
+            isOpen={deleteDialogOpen}
+            onClose={() => setDeleteDialogOpen(false)}
+            onConfirm={handleDeleteSubject}
+            title="Delete Subject"
+            description="Are you sure you want to delete this subject? This will also delete all attendance records associated with it."
+         />
       </div>
    );
 }
