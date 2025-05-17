@@ -1,13 +1,9 @@
--- Optimized database schema for the attendance system
--- Separate tables for students and teachers with normalized structure
 DROP DATABASE IF EXISTS attendance_system;
 
--- Create the database
 CREATE DATABASE IF NOT EXISTS attendance_system;
 
 USE attendance_system;
 
--- Create teachers table
 CREATE TABLE
    IF NOT EXISTS teachers (
       id INT AUTO_INCREMENT PRIMARY KEY,
@@ -19,7 +15,6 @@ CREATE TABLE
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
    );
 
--- Create students table
 CREATE TABLE
    IF NOT EXISTS students (
       id INT AUTO_INCREMENT PRIMARY KEY,
@@ -32,7 +27,6 @@ CREATE TABLE
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
    );
 
--- Create streams/classes table
 CREATE TABLE
    IF NOT EXISTS streams (
       id INT AUTO_INCREMENT PRIMARY KEY,
@@ -44,7 +38,6 @@ CREATE TABLE
       FOREIGN KEY (teacher_id) REFERENCES teachers (id) ON DELETE CASCADE
    );
 
--- Create subjects table
 CREATE TABLE
    IF NOT EXISTS subjects (
       id INT AUTO_INCREMENT PRIMARY KEY,
@@ -56,7 +49,6 @@ CREATE TABLE
       FOREIGN KEY (stream_id) REFERENCES streams (id) ON DELETE CASCADE
    );
 
--- Create subject_enrollments table
 CREATE TABLE
    IF NOT EXISTS subject_enrollments (
       id INT AUTO_INCREMENT PRIMARY KEY,
@@ -68,13 +60,12 @@ CREATE TABLE
       UNIQUE KEY (student_id, subject_id)
    );
 
--- Create attendance records table
 CREATE TABLE
    IF NOT EXISTS attendance (
       id INT AUTO_INCREMENT PRIMARY KEY,
       student_id INT NOT NULL,
       subject_id INT NOT NULL,
-      status ENUM ('present', 'absent', 'late') NOT NULL,
+      status ENUM ("present", "absent", "late") NOT NULL,
       date DATE NOT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (student_id) REFERENCES students (id) ON DELETE CASCADE,
@@ -82,25 +73,22 @@ CREATE TABLE
       UNIQUE KEY (student_id, subject_id, date)
    );
 
--- Insert sample data
--- Sample teachers
 INSERT INTO
    teachers (name, email, mobile_number, password)
 VALUES
    (
-      'Teacher One',
-      'teacher1@example.com',
-      '9876543210',
-      '$2b$10$JsRJUEFgUJkEHDFDVSnSxOJySKxK2sxjqVeWQ7LqHs9JJgj3bKVdW'
+      "Teacher One",
+      "teacher1@example.com",
+      "9876543210",
+      "$2b$10$JsRJUEFgUJkEHDFDVSnSxOJySKxK2sxjqVeWQ7LqHs9JJgj3bKVdW"
    ),
    (
-      'Teacher Two',
-      'teacher2@example.com',
-      '9876543211',
-      '$2b$10$JsRJUEFgUJkEHDFDVSnSxOJySKxK2sxjqVeWQ7LqHs9JJgj3bKVdW'
+      "Teacher Two",
+      "teacher2@example.com",
+      "9876543211",
+      "$2b$10$JsRJUEFgUJkEHDFDVSnSxOJySKxK2sxjqVeWQ7LqHs9JJgj3bKVdW"
    );
 
--- Sample students
 INSERT INTO
    students (
       name,
@@ -111,82 +99,77 @@ INSERT INTO
    )
 VALUES
    (
-      'Student One',
-      'student1@example.com',
-      '9876543212',
-      'REG001',
-      '$2b$10$JsRJUEFgUJkEHDFDVSnSxOJySKxK2sxjqVeWQ7LqHs9JJgj3bKVdW'
+      "Student One",
+      "student1@example.com",
+      "9876543212",
+      "REG001",
+      "$2b$10$JsRJUEFgUJkEHDFDVSnSxOJySKxK2sxjqVeWQ7LqHs9JJgj3bKVdW"
    ),
    (
-      'Student Two',
-      'student2@example.com',
-      '9876543213',
-      'REG002',
-      '$2b$10$JsRJUEFgUJkEHDFDVSnSxOJySKxK2sxjqVeWQ7LqHs9JJgj3bKVdW'
+      "Student Two",
+      "student2@example.com",
+      "9876543213",
+      "REG002",
+      "$2b$10$JsRJUEFgUJkEHDFDVSnSxOJySKxK2sxjqVeWQ7LqHs9JJgj3bKVdW"
    ),
    (
-      'Student Three',
-      'student3@example.com',
-      '9876543214',
-      'REG003',
-      '$2b$10$JsRJUEFgUJkEHDFDVSnSxOJySKxK2sxjqVeWQ7LqHs9JJgj3bKVdW'
+      "Student Three",
+      "student3@example.com",
+      "9876543214",
+      "REG003",
+      "$2b$10$JsRJUEFgUJkEHDFDVSnSxOJySKxK2sxjqVeWQ7LqHs9JJgj3bKVdW"
    );
 
--- Sample streams (after inserting teachers)
-INSERT INTO
-   streams (name, description, teacher_id)
-VALUES
-   (
-      'Computer Science',
-      'Bachelor of Computer Science program',
-      1
-   ),
-   (
-      'Engineering',
-      'Bachelor of Engineering program',
-      2
-   );
+-- INSERT INTO
+--    streams (name, description, teacher_id)
+-- VALUES
+--    (
+--       "Computer Science",
+--       "Bachelor of Computer Science program",
+--       1
+--    ),
+--    (
+--       "Engineering",
+--       "Bachelor of Engineering program",
+--       2
+--    );
 
--- Sample subjects (after inserting streams)
-INSERT INTO
-   subjects (name, description, stream_id)
-VALUES
-   (
-      'Database Systems',
-      'Introduction to database design and SQL',
-      1
-   ),
-   (
-      'Web Development',
-      'Full-stack web application development',
-      1
-   ),
-   (
-      'Mechanics',
-      'Engineering mechanics and dynamics',
-      2
-   );
+-- INSERT INTO
+--    subjects (name, description, stream_id)
+-- VALUES
+--    (
+--       "Database Systems",
+--       "Introduction to database design and SQL",
+--       1
+--    ),
+--    (
+--       "Web Development",
+--       "Full-stack web application development",
+--       1
+--    ),
+--    (
+--       "Mechanics",
+--       "Engineering mechanics and dynamics",
+--       2
+--    );
 
--- Sample subject enrollments
-INSERT INTO
-   subject_enrollments (student_id, subject_id)
-VALUES
-   (1, 1), -- Student One in Database Systems
-   (1, 2), -- Student One in Web Development
-   (2, 2), -- Student Two in Web Development
-   (3, 3);
+-- INSERT INTO
+--    subject_enrollments (student_id, subject_id)
+-- VALUES
+--    (1, 1),
+--    (1, 2),
+--    (2, 2),
+--    (3, 3);
 
--- Student Three in Mechanics
--- Sample attendance records
-INSERT INTO
-   attendance (student_id, subject_id, status, date)
-VALUES
-   (1, 1, 'present', '2023-05-01'), -- Student One in Database Systems
-   (1, 1, 'present', '2023-05-08'),
-   (1, 1, 'absent', '2023-05-15'),
-   (1, 2, 'present', '2023-05-02'), -- Student One in Web Development
-   (1, 2, 'late', '2023-05-09'),
-   (2, 2, 'present', '2023-05-02'), -- Student Two in Web Development
-   (2, 2, 'present', '2023-05-09'),
-   (3, 3, 'present', '2023-05-03'), -- Student Three in Mechanics
-   (3, 3, 'absent', '2023-05-10');
+-- INSERT INTO
+--    attendance (student_id, subject_id, status, date)
+-- VALUES
+--    (1, 1, "present", "2023-05-01"),
+--    (1, 1, "present", "2023-05-08"),
+--    (1, 1, "absent", "2023-05-15"),
+--    (1, 2, "present", "2023-05-02"),
+--    (1, 2, "late", "2023-05-09"),
+--    (2, 2, "present", "2023-05-02"),
+--    (2, 2, "present", "2023-05-09"),
+--    (3, 3, "present", "2023-05-03"),
+--    (3, 3, "absent", "2023-05-10");
