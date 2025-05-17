@@ -48,7 +48,7 @@ export default function CreateStream() {
          });
 
          if (response.ok) {
-            const data = await response.json();
+            await response.json(); // Parse response but we don't need the data
             toast.success("Stream created successfully");
             router.push("/teacher/streams");
          } else {

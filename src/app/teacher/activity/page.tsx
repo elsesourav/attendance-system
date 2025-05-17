@@ -33,7 +33,7 @@ interface ActivityItem {
 }
 
 export default function TeacherActivityPage() {
-   const { data: session } = useSession();
+   useSession(); // Ensure user is authenticated
    const router = useRouter();
    const [activities, setActivities] = useState<ActivityItem[]>([]);
    const [isLoading, setIsLoading] = useState(true);
@@ -325,48 +325,50 @@ export default function TeacherActivityPage() {
                                     {formatDate(date)}
                                  </h3>
                                  <div className="space-y-4 pl-4 border-l">
-                                    {filteredDateActivities.map((activity, i) => (
-                                       <div
-                                          key={i}
-                                          className="flex items-start space-x-4"
-                                       >
-                                          <div className="mt-1 bg-muted rounded-full p-2">
-                                             {getActivityIcon(activity.type)}
-                                          </div>
-                                          <div className="flex-1">
-                                             <div className="flex items-center justify-between">
-                                                <div className="font-medium">
-                                                   {activity.description}
+                                    {filteredDateActivities.map(
+                                       (activity, i) => (
+                                          <div
+                                             key={i}
+                                             className="flex items-start space-x-4"
+                                          >
+                                             <div className="mt-1 bg-muted rounded-full p-2">
+                                                {getActivityIcon(activity.type)}
+                                             </div>
+                                             <div className="flex-1">
+                                                <div className="flex items-center justify-between">
+                                                   <div className="font-medium">
+                                                      {activity.description}
+                                                   </div>
+                                                   <Badge
+                                                      variant="outline"
+                                                      className={getActivityBadgeClass(
+                                                         activity.type
+                                                      )}
+                                                   >
+                                                      {activity.type
+                                                         .charAt(0)
+                                                         .toUpperCase() +
+                                                         activity.type.slice(1)}
+                                                   </Badge>
                                                 </div>
-                                                <Badge
-                                                   variant="outline"
-                                                   className={getActivityBadgeClass(
-                                                      activity.type
-                                                   )}
-                                                >
-                                                   {activity.type
-                                                      .charAt(0)
-                                                      .toUpperCase() +
-                                                      activity.type.slice(1)}
-                                                </Badge>
-                                             </div>
-                                             <div className="flex items-center mt-1 text-sm text-muted-foreground">
-                                                <FiClock className="mr-1 h-3 w-3" />
-                                                <span>
-                                                   {new Date(
-                                                      activity.timestamp
-                                                   ).toLocaleTimeString()}
-                                                </span>
-                                                <Link
-                                                   href={activity.link}
-                                                   className="ml-auto text-sm text-primary hover:underline"
-                                                >
-                                                   View Details
-                                                </Link>
+                                                <div className="flex items-center mt-1 text-sm text-muted-foreground">
+                                                   <FiClock className="mr-1 h-3 w-3" />
+                                                   <span>
+                                                      {new Date(
+                                                         activity.timestamp
+                                                      ).toLocaleTimeString()}
+                                                   </span>
+                                                   <Link
+                                                      href={activity.link}
+                                                      className="ml-auto text-sm text-primary hover:underline"
+                                                   >
+                                                      View Details
+                                                   </Link>
+                                                </div>
                                              </div>
                                           </div>
-                                       </div>
-                                    ))}
+                                       )
+                                    )}
                                  </div>
                               </div>
                            );

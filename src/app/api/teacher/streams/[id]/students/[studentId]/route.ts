@@ -19,7 +19,7 @@ export async function DELETE(
 
       const teacherId = session.user.id;
       const streamId = parseInt(id);
-      const studentId = parseInt(studentId);
+      const SID = parseInt(studentId);
 
       // Check if the stream belongs to the teacher
       const stream = await getStreamById(streamId);
@@ -35,7 +35,7 @@ export async function DELETE(
       }
 
       // Unenroll the student
-      const success = await unenrollStudent(studentId, streamId);
+      const success = await unenrollStudent(SID, streamId);
 
       if (!success) {
          return NextResponse.json(

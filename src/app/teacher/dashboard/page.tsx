@@ -39,7 +39,7 @@ interface ActivityItem {
 }
 
 export default function TeacherDashboard() {
-   const { data: session } = useSession();
+   useSession(); // Ensure user is authenticated
    const { hideLoading } = useLoading();
    const [stats, setStats] = useState<DashboardStats>({
       streamCount: 0,

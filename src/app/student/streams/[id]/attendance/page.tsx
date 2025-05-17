@@ -122,7 +122,7 @@ export default function StudentStreamAttendance() {
 
          try {
             // Construct the API URL with filters
-            let url = `/api/student/streams/${streamId}/attendance?month=${filterMonth}&year=${filterYear}`;
+            const url = `/api/student/streams/${streamId}/attendance?month=${filterMonth}&year=${filterYear}`;
 
             const response = await fetch(url);
             if (!response.ok) {

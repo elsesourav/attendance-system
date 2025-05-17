@@ -26,7 +26,7 @@ interface Stream {
 }
 
 export default function TeacherStreams() {
-   const { data: session } = useSession();
+   useSession(); // Ensure user is authenticated
    const { showLoading, hideLoading } = useLoading();
    const [streams, setStreams] = useState<Stream[]>([]);
    const [isLoading, setIsLoading] = useState(true);
@@ -122,7 +122,7 @@ export default function TeacherStreams() {
          ) : streams.length === 0 ? (
             <div className="text-center py-10">
                <p className="text-muted-foreground mb-4">
-                  You haven't created any streams yet.
+                  You haven&apos;t created any streams yet.
                </p>
                <Link
                   href="/teacher/streams/create"

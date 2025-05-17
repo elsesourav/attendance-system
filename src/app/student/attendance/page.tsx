@@ -103,7 +103,7 @@ export default function StudentAttendanceOverview() {
 
          try {
             // Construct the API URL with filters
-            let url = `/api/student/attendance?month=${filterMonth}&year=${filterYear}`;
+            const url = `/api/student/attendance?month=${filterMonth}&year=${filterYear}`;
 
             const response = await fetch(url);
             if (!response.ok) {

@@ -80,13 +80,13 @@ VALUES
       "Teacher One",
       "teacher1@example.com",
       "9876543210",
-      "$2b$10$JsRJUEFgUJkEHDFDVSnSxOJySKxK2sxjqVeWQ7LqHs9JJgj3bKVdW"
+      "$2b$10$4UhhhoC46Xd.MDwK4neD0Oc33tsHdGREE84qj3DwRPBcjY9zZty9S"
    ),
    (
       "Teacher Two",
       "teacher2@example.com",
       "9876543211",
-      "$2b$10$JsRJUEFgUJkEHDFDVSnSxOJySKxK2sxjqVeWQ7LqHs9JJgj3bKVdW"
+      "$2b$10$4UhhhoC46Xd.MDwK4neD0Oc33tsHdGREE84qj3DwRPBcjY9zZty9S"
    );
 
 INSERT INTO
@@ -103,21 +103,28 @@ VALUES
       "student1@example.com",
       "9876543212",
       "REG001",
-      "$2b$10$JsRJUEFgUJkEHDFDVSnSxOJySKxK2sxjqVeWQ7LqHs9JJgj3bKVdW"
+      "$2b$10$4UhhhoC46Xd.MDwK4neD0Oc33tsHdGREE84qj3DwRPBcjY9zZty9S"
    ),
    (
       "Student Two",
       "student2@example.com",
       "9876543213",
       "REG002",
-      "$2b$10$JsRJUEFgUJkEHDFDVSnSxOJySKxK2sxjqVeWQ7LqHs9JJgj3bKVdW"
+      "$2b$10$4UhhhoC46Xd.MDwK4neD0Oc33tsHdGREE84qj3DwRPBcjY9zZty9S"
    ),
    (
       "Student Three",
       "student3@example.com",
       "9876543214",
       "REG003",
-      "$2b$10$JsRJUEFgUJkEHDFDVSnSxOJySKxK2sxjqVeWQ7LqHs9JJgj3bKVdW"
+      "$2b$10$4UhhhoC46Xd.MDwK4neD0Oc33tsHdGREE84qj3DwRPBcjY9zZty9S"
+   ),
+   (
+      "Student Four",
+      "student4@example.com",
+      "9876543215",
+      "REG004",
+      "$2b$10$4UhhhoC46Xd.MDwK4neD0Oc33tsHdGREE84qj3DwRPBcjY9zZty9S"
    );
 
 -- INSERT INTO

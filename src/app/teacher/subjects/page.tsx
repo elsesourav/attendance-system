@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
    FiCalendar,
@@ -34,7 +33,6 @@ interface Subject {
 }
 
 export default function TeacherSubjectsPage() {
-   const router = useRouter();
    const { showLoading, hideLoading } = useLoading();
    const [subjects, setSubjects] = useState<Subject[]>([]);
    const [filteredSubjects, setFilteredSubjects] = useState<Subject[]>([]);
