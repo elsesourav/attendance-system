@@ -7,9 +7,11 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function DELETE(
    req: NextRequest,
-   { params }: { params: { id: string; studentId: string } }
+   { params }: { params: Promise<{ id: string, studentId: string }> }
 ) {
    try {
+      const id = (await params).id;
+      const sid = (await params).studentId;
       const session = await getServerSession(authOptions);
 
       if (!session || session.user.role !== "teacher") {
@@ -17,10 +19,8 @@ export async function DELETE(
       }
 
       const teacherId = session.user.id;
-      // Convert params.id and params.studentId to numbers after ensuring they're available
-      const { id, studentId: studentIdParam } = params;
       const subjectId = parseInt(id);
-      const studentId = parseInt(studentIdParam);
+      const studentId = parseInt(sid);
 
       // Get subject details
       const subject = await getSubjectById(subjectId);

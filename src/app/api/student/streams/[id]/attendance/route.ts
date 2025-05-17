@@ -3,18 +3,47 @@ import { executeQuery } from "@/lib/db";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 
+interface StreamWithTeacher {
+   id: number;
+   name: string;
+   description: string | null;
+   teacherName: string;
+}
+
+interface AttendanceRecord {
+   id: number;
+   student_id: number;
+   subject_id: number;
+   status: "present" | "absent" | "late";
+   date: string;
+   subject_name: string;
+}
+
+interface Subject {
+   id: number;
+   name: string;
+   description: string | null;
+}
+
+interface AttendanceStats {
+   total: number;
+   present: number;
+   absent: number;
+   late: number;
+   percentage: number;
+}
+
 export async function GET(
    req: NextRequest,
-   { params }: { params: { id: string } }
+   { params }: { params: Promise<{ id: string }> }
 ) {
    try {
+      const id = (await params).id;
       const session = await getServerSession(authOptions);
 
       if (!session || session.user.role !== "student") {
          return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
-
-      const { id } = await params;
 
       if (!id || id === "undefined") {
          return NextResponse.json(
@@ -57,7 +86,7 @@ export async function GET(
          JOIN teachers t ON s.teacher_id = t.id
          WHERE s.id = ?`,
          [streamId]
-      )) as any[];
+      )) as StreamWithTeacher[];
 
       if (streams.length === 0) {
          return NextResponse.json(
@@ -74,7 +103,7 @@ export async function GET(
          WHERE a.student_id = ? AND sub.stream_id = ?
     `;
 
-      const queryParams: any[] = [studentId, streamId];
+      const queryParams: (number | string)[] = [studentId, streamId];
 
       // Filter by month and year if provided
       if (month && year) {
@@ -86,12 +115,14 @@ export async function GET(
       }
 
       // Get attendance records
-      let attendanceRecords = (await executeQuery(query, queryParams)) as any[];
+      let attendanceRecords = (await executeQuery(
+         query,
+         queryParams
+      )) as AttendanceRecord[];
 
       // Sort by date (newest first)
       attendanceRecords.sort(
-         (a: any, b: any) =>
-            new Date(b.date).getTime() - new Date(a.date).getTime()
+         (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
       );
 
       // Apply limit if specified
@@ -100,7 +131,7 @@ export async function GET(
       }
 
       // Calculate attendance statistics
-      const stats = {
+      const stats: AttendanceStats = {
          total: attendanceRecords.length,
          present: attendanceRecords.filter(
             (record) => record.status === "present"
@@ -119,14 +150,14 @@ export async function GET(
             : 0;
 
       // Get subjects in this stream that the student is enrolled in
-      const subjects = await executeQuery(
+      const subjects = (await executeQuery(
          `SELECT s.id, s.name, s.description
          FROM subjects s
          JOIN subject_enrollments se ON s.id = se.subject_id
          WHERE s.stream_id = ? AND se.student_id = ?
          ORDER BY s.name ASC`,
          [streamId, studentId]
-      );
+      )) as Subject[];
 
       return NextResponse.json({
          stream: streams[0],

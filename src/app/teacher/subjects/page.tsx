@@ -10,7 +10,25 @@ import {
    CardHeader,
    CardTitle,
 } from "@/components/ui/card";
+import {
+   Dialog,
+   DialogContent,
+   DialogDescription,
+   DialogFooter,
+   DialogHeader,
+   DialogTitle,
+   DialogTrigger,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+   Select,
+   SelectContent,
+   SelectItem,
+   SelectTrigger,
+   SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
@@ -32,12 +50,24 @@ interface Subject {
    studentCount: number;
 }
 
+interface Stream {
+   id: number;
+   name: string;
+}
+
 export default function TeacherSubjectsPage() {
    const { showLoading, hideLoading } = useLoading();
    const [subjects, setSubjects] = useState<Subject[]>([]);
    const [filteredSubjects, setFilteredSubjects] = useState<Subject[]>([]);
-   const [isLoading, setIsLoading] = useState(true);
+   const [, setIsLoading] = useState(true);
    const [searchTerm, setSearchTerm] = useState("");
+   const [isAddingSubject, setIsAddingSubject] = useState(false);
+   const [streams, setStreams] = useState<Stream[]>([]);
+   const [newSubject, setNewSubject] = useState({
+      name: "",
+      description: "",
+      streamId: "",
+   });
 
    // Hide loading overlay when component mounts
    useEffect(() => {
@@ -71,6 +101,28 @@ export default function TeacherSubjectsPage() {
       // eslint-disable-next-line react-hooks/exhaustive-deps
    }, []);
 
+   // Fetch streams for the dropdown
+   useEffect(() => {
+      const fetchStreams = async () => {
+         try {
+            const response = await fetch("/api/teacher/streams");
+            if (!response.ok) {
+               throw new Error("Failed to fetch streams");
+            }
+
+            const data = await response.json();
+            setStreams(data);
+         } catch (error) {
+            console.error("Error fetching streams:", error);
+            toast.error("Failed to load streams");
+         }
+      };
+
+      if (isAddingSubject) {
+         fetchStreams();
+      }
+   }, [isAddingSubject]);
+
    useEffect(() => {
       // Filter subjects based on search term
       if (searchTerm.trim() === "") {
@@ -87,22 +139,148 @@ export default function TeacherSubjectsPage() {
       }
    }, [searchTerm, subjects]);
 
-   // Loading state is now handled by the loading overlay
+   const handleAddSubject = async () => {
+      if (!newSubject.name.trim()) {
+         toast.error("Subject name is required");
+         return;
+      }
+
+      if (!newSubject.streamId) {
+         toast.error("Please select a stream");
+         return;
+      }
+
+      showLoading("Adding new subject...");
+
+      try {
+         const response = await fetch(
+            `/api/teacher/streams/${newSubject.streamId}/subjects`,
+            {
+               method: "POST",
+               headers: {
+                  "Content-Type": "application/json",
+               },
+               body: JSON.stringify({
+                  name: newSubject.name,
+                  description: newSubject.description,
+               }),
+            }
+         );
+
+         if (response.ok) {
+            await response.json(); // Parse response but we don't need the data
+
+            // Fetch updated subjects list
+            const subjectsResponse = await fetch("/api/teacher/subjects");
+            if (subjectsResponse.ok) {
+               const subjectsData = await subjectsResponse.json();
+               setSubjects(subjectsData);
+               setFilteredSubjects(subjectsData);
+            }
+
+            setNewSubject({ name: "", description: "", streamId: "" });
+            setIsAddingSubject(false);
+            toast.success("Subject added successfully");
+         } else {
+            const error = await response.json();
+            toast.error(error.error || "Failed to add subject");
+         }
+      } catch (error) {
+         console.error("Error adding subject:", error);
+         toast.error("An error occurred while adding the subject");
+      } finally {
+         hideLoading();
+      }
+   };
 
    return (
       <div className="space-y-6">
          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0">
             <h1 className="text-2xl sm:text-3xl font-bold">All Subjects</h1>
-            <Link
-               href="/teacher/subjects/create"
-               onClick={() => showLoading("Loading subject creation form...")}
-               className="w-full sm:w-auto"
-            >
-               <Button className="w-full sm:w-auto">
-                  <FiPlus className="mr-2" />
-                  Create Subject
-               </Button>
-            </Link>
+            <Dialog open={isAddingSubject} onOpenChange={setIsAddingSubject}>
+               <DialogTrigger asChild>
+                  <Button className="w-full sm:w-auto">
+                     <FiPlus className="mr-2" />
+                     Add Subject
+                  </Button>
+               </DialogTrigger>
+               <DialogContent>
+                  <DialogHeader>
+                     <DialogTitle>Add New Subject</DialogTitle>
+                     <DialogDescription>
+                        Create a new subject for a stream.
+                     </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                     <div className="space-y-2">
+                        <Label htmlFor="stream-select">Select Stream</Label>
+                        <Select
+                           value={newSubject.streamId}
+                           onValueChange={(value) =>
+                              setNewSubject({
+                                 ...newSubject,
+                                 streamId: value,
+                              })
+                           }
+                        >
+                           <SelectTrigger id="stream-select"   className="w-full">
+                              <SelectValue placeholder="Select a stream" />
+                           </SelectTrigger>
+                           <SelectContent>
+                              {streams.map((stream) => (
+                                 <SelectItem
+                                    key={stream.id}
+                                    value={String(stream.id)}
+                                 >
+                                    {stream.name}
+                                 </SelectItem>
+                              ))}
+                           </SelectContent>
+                        </Select>
+                     </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="subject-name">Subject Name</Label>
+                        <Input
+                           id="subject-name"
+                           value={newSubject.name}
+                           onChange={(e) =>
+                              setNewSubject({
+                                 ...newSubject,
+                                 name: e.target.value,
+                              })
+                           }
+                           placeholder="e.g., Mathematics"
+                        />
+                     </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="subject-description">
+                           Description (Optional)
+                        </Label>
+                        <Textarea
+                           id="subject-description"
+                           value={newSubject.description}
+                           onChange={(e) =>
+                              setNewSubject({
+                                 ...newSubject,
+                                 description: e.target.value,
+                              })
+                           }
+                           placeholder="Provide a brief description of this subject"
+                           rows={3}
+                        />
+                     </div>
+                  </div>
+                  <DialogFooter>
+                     <Button
+                        variant="outline"
+                        onClick={() => setIsAddingSubject(false)}
+                     >
+                        Cancel
+                     </Button>
+                     <Button onClick={handleAddSubject}>Add Subject</Button>
+                  </DialogFooter>
+               </DialogContent>
+            </Dialog>
          </div>
 
          <div className="flex items-center space-x-2 mb-6">

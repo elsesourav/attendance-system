@@ -3,17 +3,25 @@ import { executeQuery } from "@/lib/db";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 
+interface StreamWithTeacher {
+   id: number;
+   name: string;
+   description: string | null;
+   teacherName: string;
+}
+
 export async function GET(
-   req: NextRequest,
-   { params }: { params: { id: string } }
+   _req: NextRequest,
+   { params }: { params: Promise<{ id: string }> }
 ) {
    try {
+      const id = (await params).id;
+      
       const session = await getServerSession(authOptions);
 
       if (!session || session.user.role !== "student") {
          return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
-      const { id } = await params;
 
       if (!id || id === "undefined") {
          return NextResponse.json(
@@ -48,7 +56,7 @@ export async function GET(
        JOIN teachers t ON s.teacher_id = t.id
        WHERE s.id = ?`,
          [streamId]
-      )) as any[];
+      )) as StreamWithTeacher[];
 
       if (streams.length === 0) {
          return NextResponse.json(

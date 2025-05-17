@@ -150,7 +150,7 @@ export default function StudentSubjectsPage() {
                                        >
                                           <Button variant="outline" size="sm">
                                              <FiBook className="mr-2 h-4 w-4" />
-                                             View Details
+                                             View
                                           </Button>
                                        </Link>
                                        <Link

@@ -30,7 +30,7 @@ import {
    TableRow,
 } from "@/components/ui/table";
 import Link from "next/link";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
    FiArrowLeft,
@@ -71,8 +71,9 @@ export default function SubjectView() {
    const router = useRouter();
    const { showLoading, hideLoading } = useLoading();
    const subjectId = params.id as string;
-   const searchParams = useSearchParams();
-   const fromStream = searchParams.get("from") === "stream";
+   // We can use these parameters for navigation if needed
+   // const searchParams = useSearchParams();
+   // const fromStream = searchParams.get("from") === "stream";
 
    // Hide loading overlay when component mounts
    useEffect(() => {

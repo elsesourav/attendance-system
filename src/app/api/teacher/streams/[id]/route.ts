@@ -6,16 +6,15 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
    req: NextRequest,
-   { params }: { params: { id: string } }
+   { params }: { params: Promise<{ id: string }> }
 ) {
    try {
+      const id = (await params).id;
       const session = await getServerSession(authOptions);
 
       if (!session || session.user.role !== "teacher") {
          return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
-
-      const { id } = await params;
 
       console.log("id", id);
 
@@ -70,16 +69,15 @@ export async function GET(
 
 export async function PUT(
    req: NextRequest,
-   { params }: { params: { id: string } }
+   { params }: { params: Promise<{ id: string }> }
 ) {
    try {
+      const id = (await params).id;
       const session = await getServerSession(authOptions);
 
       if (!session || session.user.role !== "teacher") {
          return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
-
-      const { id } = await params;
 
       const teacherId = session.user.id;
       const streamId = parseInt(id);
@@ -127,16 +125,15 @@ export async function PUT(
 
 export async function DELETE(
    req: NextRequest,
-   { params }: { params: { id: string } }
+   { params }: { params: Promise<{ id: string }> }
 ) {
    try {
+      const id = (await params).id;
       const session = await getServerSession(authOptions);
 
       if (!session || session.user.role !== "teacher") {
          return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
-
-      const { id } = await params;
 
       const teacherId = session.user.id;
       const streamId = parseInt(id);

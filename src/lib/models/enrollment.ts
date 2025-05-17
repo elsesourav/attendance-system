@@ -29,20 +29,22 @@ export async function enrollStudent(
             const result = (await executeQuery(
                "INSERT INTO subject_enrollments (student_id, subject_id) VALUES (?, ?)",
                [studentId, subject.id]
-            )) as any;
+            )) as { insertId: number };
 
             enrollmentIds.push(result.insertId);
-         } catch (error: any) {
+         } catch (error) {
+            const mysqlError = error as { code?: string };
             // Ignore duplicate entry errors for individual subjects
-            if (error.code !== "ER_DUP_ENTRY") {
+            if (mysqlError.code !== "ER_DUP_ENTRY") {
                throw error;
             }
          }
       }
 
       return enrollmentIds;
-   } catch (error: any) {
-      if (error.message === "No subjects found in this stream") {
+   } catch (error) {
+      const err = error as Error;
+      if (err.message === "No subjects found in this stream") {
          throw error;
       }
       throw new Error("Failed to enroll student in stream");
@@ -78,7 +80,16 @@ export async function unenrollStudent(
 }
 
 // Get all students enrolled in any subject of a stream
-export async function getStudentsByStreamId(streamId: number): Promise<any[]> {
+export interface EnrolledStudent {
+   id: number;
+   name: string;
+   email: string;
+   registration_number: string;
+}
+
+export async function getStudentsByStreamId(
+   streamId: number
+): Promise<EnrolledStudent[]> {
    return (await executeQuery(
       `SELECT DISTINCT s.id, s.name, s.email, s.registration_number
      FROM students s
@@ -87,7 +98,7 @@ export async function getStudentsByStreamId(streamId: number): Promise<any[]> {
      WHERE sub.stream_id = ?
      ORDER BY s.name ASC`,
       [streamId]
-   )) as any[];
+   )) as EnrolledStudent[];
 }
 
 // Check if a student is enrolled in any subject of a stream

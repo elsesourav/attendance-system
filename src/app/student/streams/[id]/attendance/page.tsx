@@ -37,12 +37,6 @@ interface Stream {
    teacherName: string;
 }
 
-interface Subject {
-   id: number;
-   name: string;
-   description: string | null;
-}
-
 interface AttendanceRecord {
    id: number;
    student_id: number;
@@ -67,7 +61,6 @@ export default function StudentStreamAttendance() {
    const { showLoading, hideLoading } = useLoading();
 
    const [stream, setStream] = useState<Stream | null>(null);
-   const [subjects, setSubjects] = useState<Subject[]>([]);
    const [attendanceRecords, setAttendanceRecords] = useState<
       AttendanceRecord[]
    >([]);
@@ -136,7 +129,6 @@ export default function StudentStreamAttendance() {
 
             const data = await response.json();
             setStream(data.stream);
-            setSubjects(data.subjects);
             setAttendanceRecords(data.records);
             setAttendanceStats(data.stats);
          } catch (error) {
@@ -174,8 +166,8 @@ export default function StudentStreamAttendance() {
 
    return (
       <div className="space-y-6">
-         <div className="flex items-center justify-between">
-            <div className="flex items-center">
+         <div className="flex items-center justify-between gap-4 flex-col sm:flex-row">
+            <div className="flex w-full items-center">
                <Button
                   variant="ghost"
                   size="icon"
@@ -188,7 +180,7 @@ export default function StudentStreamAttendance() {
                >
                   <FiArrowLeft className="h-4 w-4" />
                </Button>
-               <h1 className="text-3xl font-bold">Stream Attendance</h1>
+               <h1 className="text-2xl font-bold md:text-3xl">Stream Attendance</h1>
             </div>
             <div className="flex items-center space-x-2">
                <FiFilter className="text-muted-foreground" />
@@ -286,31 +278,6 @@ export default function StudentStreamAttendance() {
                )}
             </CardContent>
          </Card>
-
-         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-            {subjects.map((subject) => (
-               <Card key={subject.id}>
-                  <CardHeader>
-                     <div className="flex justify-between items-center">
-                        <CardTitle className="text-lg">
-                           {subject.name}
-                        </CardTitle>
-                        <Link
-                           href={`/student/subjects/${subject.id}/attendance`}
-                        >
-                           <Button variant="outline" size="sm">
-                              <FiCalendar className="mr-2 h-4 w-4" />
-                              View Details
-                           </Button>
-                        </Link>
-                     </div>
-                     <CardDescription>
-                        {subject.description || "No description provided"}
-                     </CardDescription>
-                  </CardHeader>
-               </Card>
-            ))}
-         </div>
 
          {attendanceRecords.length === 0 ? (
             <div className="text-center py-10 bg-muted/20 rounded-lg">

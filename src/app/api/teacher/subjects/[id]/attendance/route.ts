@@ -6,9 +6,17 @@ import { getSubjectById } from "@/lib/models/subject";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 
+// We can use this interface if we need to refactor the code later
+// interface AttendanceQueryParams {
+//    subjectId: number;
+//    date?: string;
+//    month?: string;
+//    year?: string;
+// }
+
 export async function GET(
    req: NextRequest,
-   { params }: { params: { id: string } }
+   { params }: { params: Promise<{ id: string }> }
 ) {
    // Define variables at the top level of the try block so they're available in the catch block
    let subjectId: number = 0;
@@ -19,6 +27,7 @@ export async function GET(
    let year: string | null = null;
 
    try {
+      const id = (await params).id;
       const session = await getServerSession(authOptions);
 
       if (!session || session.user.role !== "teacher") {
@@ -26,8 +35,6 @@ export async function GET(
       }
 
       const teacherId = session.user.id;
-      // Convert params.id to number
-      const { id } = await params;
       subjectId = parseInt(id);
       const url = new URL(req.url);
       page = url.searchParams.get("page")
@@ -70,7 +77,7 @@ export async function GET(
       WHERE a.subject_id = ?
     `;
 
-      const queryParams: any[] = [subjectId];
+      const queryParams: (number | string)[] = [subjectId];
 
       // Filter by specific date if provided
       if (date) {
@@ -96,7 +103,7 @@ export async function GET(
          WHERE a.subject_id = ?
       `;
 
-      const countParams: any[] = [subjectId];
+      const countParams: (number | string)[] = [subjectId];
 
       // Add the same filters to the count query
       if (date) {
@@ -157,9 +164,10 @@ export async function GET(
 
 export async function POST(
    req: NextRequest,
-   { params }: { params: { id: string } }
+   { params }: { params: Promise<{ id: string }> }
 ) {
    try {
+      const id = (await params).id;
       const session = await getServerSession(authOptions);
 
       if (!session || session.user.role !== "teacher") {
@@ -167,8 +175,6 @@ export async function POST(
       }
 
       const teacherId = session.user.id;
-      // Convert params.id to number
-      const { id } = await params;
       const subjectId = parseInt(id);
       const { date, records } = await req.json();
 

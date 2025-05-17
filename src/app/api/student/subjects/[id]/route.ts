@@ -4,17 +4,29 @@ import { getSubjectById } from "@/lib/models/subject";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 
+interface SubjectEnrollment {
+   id: number;
+   student_id: number;
+   subject_id: number;
+   created_at: string;
+}
+
+interface StreamDetails {
+   streamName: string;
+   teacherName: string;
+}
+
 export async function GET(
-   req: NextRequest,
-   { params }: { params: { id: string } }
+   _req: NextRequest,
+   { params }: { params: Promise<{ id: string }> }
 ) {
    try {
+      const id = (await params).id;
       const session = await getServerSession(authOptions);
 
       if (!session || session.user.role !== "student") {
          return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
-      const { id } = await params;
 
       const studentId = session.user.id;
       const subjectId = parseInt(id);
@@ -32,7 +44,7 @@ export async function GET(
       const isEnrolled = (await executeQuery(
          "SELECT * FROM subject_enrollments WHERE student_id = ? AND subject_id = ?",
          [studentId, subjectId]
-      )) as any[];
+      )) as SubjectEnrollment[];
 
       if (isEnrolled.length === 0) {
          return NextResponse.json(
@@ -48,7 +60,7 @@ export async function GET(
        JOIN teachers t ON s.teacher_id = t.id
        WHERE s.id = ?`,
          [subject.stream_id]
-      )) as any[];
+      )) as StreamDetails[];
 
       if (streamDetails.length === 0) {
          return NextResponse.json(

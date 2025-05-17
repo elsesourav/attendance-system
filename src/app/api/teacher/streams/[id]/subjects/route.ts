@@ -1,22 +1,27 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { executeQuery } from "@/lib/db";
 import { getStreamById } from "@/lib/models/stream";
 import { createSubject } from "@/lib/models/subject";
+import { getServerSession } from "next-auth";
+import { NextRequest, NextResponse } from "next/server";
+
+interface Subject {
+   id: number;
+   name: string;
+   description: string | null;
+}
 
 export async function GET(
-   req: NextRequest,
-   { params }: { params: { id: string } }
+   _req: NextRequest,
+   { params }: { params: Promise<{ id: string }> }
 ) {
    try {
+      const id = (await params).id;
       const session = await getServerSession(authOptions);
 
       if (!session || session.user.role !== "teacher") {
          return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
-
-      const { id } = await params;
 
       const teacherId = session.user.id;
       const streamId = parseInt(id);
@@ -55,16 +60,15 @@ export async function GET(
 
 export async function POST(
    req: NextRequest,
-   { params }: { params: { id: string } }
+   { params }: { params: Promise<{ id: string }> }
 ) {
    try {
+      const id = (await params).id;
       const session = await getServerSession(authOptions);
 
       if (!session || session.user.role !== "teacher") {
          return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
-
-      const { id } = await params;
 
       const teacherId = session.user.id;
       const streamId = parseInt(id);
@@ -101,7 +105,7 @@ export async function POST(
       const subjects = (await executeQuery(
          "SELECT id, name, description FROM subjects WHERE id = ?",
          [subjectId]
-      )) as any[];
+      )) as Subject[];
 
       return NextResponse.json(subjects[0], { status: 201 });
    } catch (error) {

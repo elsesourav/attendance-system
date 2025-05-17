@@ -138,10 +138,12 @@ export default function StudentAttendanceOverview() {
 
    return (
       <div className="space-y-6">
-         <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold">Attendance Records</h1>
-            <div className="flex items-center space-x-2">
-               <div className="flex items-center space-x-2">
+         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0">
+            <h1 className="text-2xl sm:text-3xl font-bold">
+               Attendance Records
+            </h1>
+            <div className="w-full sm:w-auto flex items-center space-x-2">
+               <div className="flex flex-wrap items-center gap-2">
                   <FiFilter className="text-muted-foreground" />
                   <Select
                      value={filterMonth}
@@ -153,7 +155,7 @@ export default function StudentAttendanceOverview() {
                         setFilterMonth(value);
                      }}
                   >
-                     <SelectTrigger className="w-[120px]">
+                     <SelectTrigger className="w-[110px]">
                         <SelectValue placeholder="Month" />
                      </SelectTrigger>
                      <SelectContent>
@@ -174,7 +176,7 @@ export default function StudentAttendanceOverview() {
                         setFilterYear(value);
                      }}
                   >
-                     <SelectTrigger className="w-[100px]">
+                     <SelectTrigger className="w-[90px]">
                         <SelectValue placeholder="Year" />
                      </SelectTrigger>
                      <SelectContent>

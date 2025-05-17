@@ -9,7 +9,6 @@ import {
    CardHeader,
    CardTitle,
 } from "@/components/ui/card";
-import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { FiBook, FiCalendar } from "react-icons/fi";
@@ -24,7 +23,6 @@ interface Stream {
 }
 
 export default function StudentStreams() {
-   useSession(); // Ensure user is authenticated
    const [streams, setStreams] = useState<Stream[]>([]);
    const [isLoading, setIsLoading] = useState(true);
 
@@ -84,7 +82,7 @@ export default function StudentStreams() {
                         <Link href={`/student/streams/${stream.id}`}>
                            <Button variant="outline">
                               <FiBook className="mr-2" />
-                              View Subjects
+                              Subjects
                            </Button>
                         </Link>
                         <Link href={`/student/streams/${stream.id}/attendance`}>

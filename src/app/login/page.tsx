@@ -156,7 +156,7 @@ export default function LoginPage() {
                   <p className="text-sm text-muted-foreground mb-2">
                      Don&apos;t have an account?
                   </p>
-                  <div className="flex justify-center space-x-4">
+                  <div className="flex flex-col justify-around gap-2 md:flex-row">
                      <Button
                         variant="outline"
                         onClick={() => {

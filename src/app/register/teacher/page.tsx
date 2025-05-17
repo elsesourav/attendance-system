@@ -99,7 +99,7 @@ export default function TeacherRegisterPage() {
                   >
                      <FiArrowLeft className="h-4 w-4" />
                   </Button>
-                  <CardTitle className="text-2xl font-bold">
+                  <CardTitle className="text-xl font-bold md:text-2xl">
                      Teacher Registration
                   </CardTitle>
                </div>

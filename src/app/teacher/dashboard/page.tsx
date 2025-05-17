@@ -40,6 +40,7 @@ interface ActivityItem {
 
 export default function TeacherDashboard() {
    useSession(); // Ensure user is authenticated
+   const limit = 15;
    const { hideLoading } = useLoading();
    const [stats, setStats] = useState<DashboardStats>({
       streamCount: 0,
@@ -76,7 +77,7 @@ export default function TeacherDashboard() {
    useEffect(() => {
       const fetchActivity = async () => {
          try {
-            const response = await fetch("/api/teacher/activity");
+            const response = await fetch(`/api/teacher/activity?limit=${limit}`);
             if (response.ok) {
                const data = await response.json();
                setActivities(data);
@@ -168,11 +169,21 @@ export default function TeacherDashboard() {
                   </CardTitle>
                </CardHeader>
                <CardContent>
-                  <div className="flex items-center">
-                     <FiBook className="mr-2 h-4 w-4 text-muted-foreground" />
-                     <div className="text-2xl font-bold">
-                        {isLoading ? "..." : stats.streamCount}
+                  <div className="flex items-center justify-between">
+                     <div className="flex items-center">
+                        <FiBook className="mr-2 h-4 w-4 text-muted-foreground" />
+                        <div className="text-2xl font-bold">
+                           {isLoading ? "..." : stats.streamCount}
+                        </div>
                      </div>
+                     <Link
+                        href="/teacher/streams"
+                        onClick={() => hideLoading()}
+                     >
+                        <Button variant="outline" size="sm">
+                           View
+                        </Button>
+                     </Link>
                   </div>
                </CardContent>
             </Card>
@@ -184,11 +195,21 @@ export default function TeacherDashboard() {
                   </CardTitle>
                </CardHeader>
                <CardContent>
-                  <div className="flex items-center">
-                     <FiBook className="mr-2 h-4 w-4 text-muted-foreground" />
-                     <div className="text-2xl font-bold">
-                        {isLoading ? "..." : stats.subjectCount}
+                  <div className="flex items-center justify-between">
+                     <div className="flex items-center">
+                        <FiBook className="mr-2 h-4 w-4 text-muted-foreground" />
+                        <div className="text-2xl font-bold">
+                           {isLoading ? "..." : stats.subjectCount}
+                        </div>
                      </div>
+                     <Link
+                        href="/teacher/subjects"
+                        onClick={() => hideLoading()}
+                     >
+                        <Button variant="outline" size="sm">
+                           View
+                        </Button>
+                     </Link>
                   </div>
                </CardContent>
             </Card>
@@ -200,11 +221,21 @@ export default function TeacherDashboard() {
                   </CardTitle>
                </CardHeader>
                <CardContent>
-                  <div className="flex items-center">
-                     <FiUsers className="mr-2 h-4 w-4 text-muted-foreground" />
-                     <div className="text-2xl font-bold">
-                        {isLoading ? "..." : stats.studentCount}
+                  <div className="flex items-center justify-between">
+                     <div className="flex items-center">
+                        <FiUsers className="mr-2 h-4 w-4 text-muted-foreground" />
+                        <div className="text-2xl font-bold">
+                           {isLoading ? "..." : stats.studentCount}
+                        </div>
                      </div>
+                     <Link
+                        href="/teacher/students"
+                        onClick={() => hideLoading()}
+                     >
+                        <Button variant="outline" size="sm">
+                           View
+                        </Button>
+                     </Link>
                   </div>
                </CardContent>
             </Card>

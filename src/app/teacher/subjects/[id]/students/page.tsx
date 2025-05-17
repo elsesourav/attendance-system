@@ -227,7 +227,7 @@ export default function ManageSubjectStudents() {
    }
 
    return (
-      <div className="space-y-6">
+      <div className="space-y-6 p-2 sm:p-4 md:p-6">
          <div className="flex items-center">
             <Button
                variant="ghost"
@@ -241,12 +241,16 @@ export default function ManageSubjectStudents() {
             >
                <FiArrowLeft className="h-4 w-4" />
             </Button>
-            <h1 className="text-3xl font-bold">Manage Students</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold truncate">
+               Manage Students
+            </h1>
          </div>
 
-         <Card>
-            <CardHeader>
-               <CardTitle>{subject.name}</CardTitle>
+         <Card className="overflow-hidden">
+            <CardHeader className="px-4 sm:px-6">
+               <CardTitle className="text-xl sm:text-2xl truncate">
+                  {subject.name}
+               </CardTitle>
                <CardDescription>
                   {subject.description || "No description provided"}
                   <div className="mt-1 text-sm">
@@ -254,10 +258,10 @@ export default function ManageSubjectStudents() {
                   </div>
                </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-4 sm:px-6">
                <div className="space-y-6">
-                  <div className="flex justify-between items-center">
-                     <h2 className="text-xl font-semibold">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0">
+                     <h2 className="text-lg sm:text-xl font-semibold">
                         Enrolled Students ({enrolledStudents.length})
                      </h2>
                      <Dialog
@@ -265,23 +269,25 @@ export default function ManageSubjectStudents() {
                         onOpenChange={setIsAddingStudent}
                      >
                         <DialogTrigger asChild>
-                           <Button>
+                           <Button className="w-full sm:w-auto">
                               <FiPlus className="mr-2" />
                               Add Student
                            </Button>
                         </DialogTrigger>
-                        <DialogContent className="max-w-3xl">
-                           <DialogHeader>
-                              <DialogTitle>Add Students to Subject</DialogTitle>
-                              <DialogDescription>
+                        <DialogContent className="w-[95vw] max-w-sm md:max-w-3xl">
+                           <DialogHeader className="relative">
+                              <DialogTitle className="text-center">
+                                 Add Students to Subject
+                              </DialogTitle>
+                              <DialogDescription className="text-center">
                                  Enroll students in {subject.name}
                               </DialogDescription>
                            </DialogHeader>
                            <div className="py-4">
                               <div className="flex items-center space-x-2 mb-4">
-                                 <FiSearch className="text-muted-foreground" />
+                                 <FiSearch className="text-muted-foreground flex-shrink-0" />
                                  <Input
-                                    placeholder="Search by name, email, or registration number"
+                                    placeholder="Search by name or reg. number"
                                     value={searchTerm}
                                     onChange={(e) =>
                                        setSearchTerm(e.target.value)
@@ -296,47 +302,57 @@ export default function ManageSubjectStudents() {
                                  </p>
                               ) : (
                                  <div className="max-h-96 overflow-y-auto">
-                                    <Table>
-                                       <TableHeader>
-                                          <TableRow>
-                                             <TableHead>Name</TableHead>
-                                             <TableHead>Email</TableHead>
-                                             <TableHead>
-                                                Registration No.
-                                             </TableHead>
-                                             <TableHead className="text-right">
-                                                Action
-                                             </TableHead>
-                                          </TableRow>
-                                       </TableHeader>
-                                       <TableBody>
-                                          {filteredStudents.map((student) => (
-                                             <TableRow key={student.id}>
-                                                <TableCell>
-                                                   {student.name}
-                                                </TableCell>
-                                                <TableCell>
-                                                   {student.email}
-                                                </TableCell>
-                                                <TableCell>
-                                                   {student.registration_number}
-                                                </TableCell>
-                                                <TableCell className="text-right">
-                                                   <Button
-                                                      size="sm"
-                                                      onClick={() =>
-                                                         handleEnrollStudent(
-                                                            student.id
-                                                         )
-                                                      }
-                                                   >
-                                                      Enroll
-                                                   </Button>
-                                                </TableCell>
+                                    <div className="overflow-x-auto">
+                                       <Table>
+                                          <TableHeader>
+                                             <TableRow>
+                                                <TableHead className="whitespace-nowrap">
+                                                   Name
+                                                </TableHead>
+                                                <TableHead className="whitespace-nowrap hidden sm:table-cell">
+                                                   Email
+                                                </TableHead>
+                                                <TableHead className="whitespace-nowrap">
+                                                   Reg. No.
+                                                </TableHead>
+                                                <TableHead className="text-right whitespace-nowrap">
+                                                   Action
+                                                </TableHead>
                                              </TableRow>
-                                          ))}
-                                       </TableBody>
-                                    </Table>
+                                          </TableHeader>
+                                          <TableBody>
+                                             {filteredStudents.map(
+                                                (student) => (
+                                                   <TableRow key={student.id}>
+                                                      <TableCell className="font-medium">
+                                                         {student.name}
+                                                      </TableCell>
+                                                      <TableCell className="hidden sm:table-cell">
+                                                         {student.email}
+                                                      </TableCell>
+                                                      <TableCell className="whitespace-nowrap">
+                                                         {
+                                                            student.registration_number
+                                                         }
+                                                      </TableCell>
+                                                      <TableCell className="text-right">
+                                                         <Button
+                                                            size="sm"
+                                                            onClick={() =>
+                                                               handleEnrollStudent(
+                                                                  student.id
+                                                               )
+                                                            }
+                                                         >
+                                                            Enroll
+                                                         </Button>
+                                                      </TableCell>
+                                                   </TableRow>
+                                                )
+                                             )}
+                                          </TableBody>
+                                       </Table>
+                                    </div>
                                  </div>
                               )}
                            </div>
@@ -353,13 +369,13 @@ export default function ManageSubjectStudents() {
                   </div>
 
                   {enrolledStudents.length === 0 ? (
-                     <div className="text-center py-6 bg-muted/20 rounded-lg">
+                     <div className="text-center py-6 px-2 bg-muted/20 rounded-lg">
                         <p className="text-muted-foreground">
                            No students enrolled in this subject yet
                         </p>
                         <Button
                            variant="outline"
-                           className="mt-2"
+                           className="mt-2 w-full sm:w-auto"
                            onClick={() => setIsAddingStudent(true)}
                         >
                            <FiPlus className="mr-2" />
@@ -367,41 +383,53 @@ export default function ManageSubjectStudents() {
                         </Button>
                      </div>
                   ) : (
-                     <Table>
-                        <TableHeader>
-                           <TableRow>
-                              <TableHead>Name</TableHead>
-                              <TableHead>Email</TableHead>
-                              <TableHead>Registration No.</TableHead>
-                              <TableHead className="text-right">
-                                 Action
-                              </TableHead>
-                           </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                           {enrolledStudents.map((student) => (
-                              <TableRow key={student.id}>
-                                 <TableCell>{student.name}</TableCell>
-                                 <TableCell>{student.email}</TableCell>
-                                 <TableCell>
-                                    {student.registration_number}
-                                 </TableCell>
-                                 <TableCell className="text-right">
-                                    <Button
-                                       variant="outline"
-                                       size="icon"
-                                       className="text-red-500 hover:text-red-600"
-                                       onClick={() =>
-                                          openDeleteDialog(student.id)
-                                       }
-                                    >
-                                       <FiTrash2 className="h-4 w-4" />
-                                    </Button>
-                                 </TableCell>
+                     <div className="overflow-x-auto">
+                        <Table>
+                           <TableHeader>
+                              <TableRow>
+                                 <TableHead className="whitespace-nowrap">
+                                    Name
+                                 </TableHead>
+                                 <TableHead className="whitespace-nowrap hidden sm:table-cell">
+                                    Email
+                                 </TableHead>
+                                 <TableHead className="whitespace-nowrap">
+                                    Reg. No.
+                                 </TableHead>
+                                 <TableHead className="text-right whitespace-nowrap">
+                                    Action
+                                 </TableHead>
                               </TableRow>
-                           ))}
-                        </TableBody>
-                     </Table>
+                           </TableHeader>
+                           <TableBody>
+                              {enrolledStudents.map((student) => (
+                                 <TableRow key={student.id}>
+                                    <TableCell className="font-medium">
+                                       {student.name}
+                                    </TableCell>
+                                    <TableCell className="hidden sm:table-cell">
+                                       {student.email}
+                                    </TableCell>
+                                    <TableCell className="whitespace-nowrap">
+                                       {student.registration_number}
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                       <Button
+                                          variant="outline"
+                                          size="icon"
+                                          className="text-red-500 hover:text-red-600"
+                                          onClick={() =>
+                                             openDeleteDialog(student.id)
+                                          }
+                                       >
+                                          <FiTrash2 className="h-4 w-4" />
+                                       </Button>
+                                    </TableCell>
+                                 </TableRow>
+                              ))}
+                           </TableBody>
+                        </Table>
+                     </div>
                   )}
                </div>
             </CardContent>

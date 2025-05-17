@@ -31,10 +31,6 @@ export default function EditSubject() {
    const router = useRouter();
    const { hideLoading } = useLoading();
    const subjectId = params.id as string;
-   const searchParams = new URLSearchParams(
-      typeof window !== "undefined" ? window.location.search : ""
-   );
-   const fromStream = searchParams.get("from") === "stream";
 
    const [isLoading, setIsLoading] = useState(true);
    const [isSaving, setIsSaving] = useState(false);

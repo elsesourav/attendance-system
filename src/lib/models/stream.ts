@@ -31,7 +31,7 @@ export async function createStream(
    const result = (await executeQuery(
       "INSERT INTO streams (name, description, teacher_id) VALUES (?, ?, ?)",
       [stream.name, stream.description, stream.teacher_id]
-   )) as any;
+   )) as { insertId: number };
 
    return result.insertId;
 }
@@ -42,10 +42,15 @@ export async function updateStream(
 ): Promise<boolean> {
    const { name, description } = stream;
 
+   // Ensure name is not undefined
+   if (!name) {
+      throw new Error("Stream name is required for update");
+   }
+
    const result = (await executeQuery(
       "UPDATE streams SET name = ?, description = ? WHERE id = ?",
-      [name, description, id]
-   )) as any;
+      [name, description || null, id]
+   )) as { affectedRows: number };
 
    return result.affectedRows > 0;
 }
@@ -53,7 +58,7 @@ export async function updateStream(
 export async function deleteStream(id: number): Promise<boolean> {
    const result = (await executeQuery("DELETE FROM streams WHERE id = ?", [
       id,
-   ])) as any;
+   ])) as { affectedRows: number };
 
    return result.affectedRows > 0;
 }

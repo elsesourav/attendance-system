@@ -74,27 +74,27 @@ export default function StudentLayout({
             </div>
          </div>
 
-         <div className="relative flex flex-1 overflow-hidden">
+         <div className="relative flex h-[100svh] overflow-hidden">
             {/* Sidebar - hidden on mobile unless toggled */}
             <div
                className={`
-                  fixed lg:static top-0 left-0 z-50 h-screen w-64
+                  fixed lg:sticky top-0 left-0 z-50 min-h-screen w-64
                   bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700
                   transition-transform duration-300 ease-in-out
                   flex flex-col overflow-y-auto
                   ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}
-                  lg:translate-x-0
+                  lg:translate-x-0 lg:h-screen
                `}
             >
                {/* Sidebar Header - visible only on desktop */}
-               <div className="hidden lg:block p-6">
+               <div className="hidden lg:block p-6 pr-1">
                   <div className="flex justify-between items-center">
                      <div>
-                        <h2 className="text-xl font-bold">Student Dashboard</h2>
-                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                        <h2 className="text-md font-bold">Student Dashboard</h2>
+                        <p className="text-sm text-muted-foreground">
                            {session?.user?.name}
                         </p>
-                        <p className="text-xs text-gray-400 dark:text-gray-500">
+                        <p className="text-xs text-muted-foreground">
                            Reg: {session?.user?.registrationNumber}
                         </p>
                      </div>
@@ -105,11 +105,10 @@ export default function StudentLayout({
                {/* Mobile Sidebar Header - with close button */}
                <div className="lg:hidden p-4 flex justify-between items-center border-b border-gray-200 dark:border-gray-700">
                   <div>
-                     <h2 className="text-lg font-bold">Menu</h2>
-                     <p className="text-sm text-gray-500 dark:text-gray-400">
+                     <p className="text-md text-lg font-bold">
                         {session?.user?.name}
                      </p>
-                     <p className="text-xs text-gray-400 dark:text-gray-500">
+                     <p className="text-xs text-muted-foreground">
                         Reg: {session?.user?.registrationNumber}
                      </p>
                   </div>

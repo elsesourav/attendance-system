@@ -170,7 +170,8 @@ export default function TeacherAttendanceView() {
                      errorData.details ||
                      "Failed to fetch attendance records"
                );
-            } catch (parseError) {
+            } catch {
+               // If JSON parsing fails, throw a generic error with the status code
                throw new Error(
                   `Failed to fetch attendance records: ${attendanceResponse.status}`
                );

@@ -1,21 +1,21 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { getStreamById } from "@/lib/models/stream";
 import { unenrollStudent } from "@/lib/models/enrollment";
+import { getStreamById } from "@/lib/models/stream";
+import { getServerSession } from "next-auth";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function DELETE(
    req: NextRequest,
-   { params }: { params: { id: string; studentId: string } }
+   { params }: { params: Promise<{ id: string, studentId: string }> }
 ) {
    try {
+      const id = (await params).id;
+      const studentId = (await params).studentId;
       const session = await getServerSession(authOptions);
 
       if (!session || session.user.role !== "teacher") {
          return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
-
-      const { id, studentId } = await params;
 
       const teacherId = session.user.id;
       const streamId = parseInt(id);

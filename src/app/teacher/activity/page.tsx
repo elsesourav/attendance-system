@@ -34,6 +34,7 @@ interface ActivityItem {
 
 export default function TeacherActivityPage() {
    useSession(); // Ensure user is authenticated
+   const limit = 200;
    const router = useRouter();
    const [activities, setActivities] = useState<ActivityItem[]>([]);
    const [isLoading, setIsLoading] = useState(true);
@@ -52,7 +53,7 @@ export default function TeacherActivityPage() {
       const fetchActivity = async () => {
          setIsLoading(true);
          try {
-            const url = `/api/teacher/activity?month=${filterMonth}&year=${filterYear}`;
+            const url = `/api/teacher/activity?month=${filterMonth}&year=${filterYear}&limit=${limit}`;
             const response = await fetch(url);
             if (response.ok) {
                const data = await response.json();
@@ -362,7 +363,7 @@ export default function TeacherActivityPage() {
                                                       href={activity.link}
                                                       className="ml-auto text-sm text-primary hover:underline"
                                                    >
-                                                      View Details
+                                                      View
                                                    </Link>
                                                 </div>
                                              </div>
