@@ -60,21 +60,21 @@ The application uses a relational database with the following structure:
   <tr>
     <td>
       <h4>Attendance Taking</h4>
-      <img src="./public/attendance.gif">
+      <img src="./public/gifs/attendance.gif">
     </td>
     <td>
       <h4>Record Filtering</h4>
-      <img src="./public/filtering.gif">
+      <img src="./public/gifs/filtering.gif">
     </td>
   </tr>
   <tr>
     <td>
       <h4>Responsive Design</h4>
-      <img src="./public/responsive.gif">
+      <img src="./public/gifs/responsive.gif">
     </td>
     <td>
       <h4>Theme Switching</h4>
-      <img src="./public/theme.gif">
+      <img src="./public/gifs/theme.gif">
     </td>
   </tr>
 </table>
