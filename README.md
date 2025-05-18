@@ -56,29 +56,28 @@ The application uses a relational database with the following structure:
 
 ## Project Highlights
 
-<div align="center">
-  <!-- Add your GIFs here -->
-  <div style="display: flex; justify-content: space-around; margin-bottom: 20px;">
-    <div>
-      <h4>Responsive Design</h4>
-      <p><em>Add responsive design GIF here</em></p>
-    </div>
-    <div>
-      <h4>Theme Switching</h4>
-      <p><em>Add theme switching GIF here</em></p>
-    </div>
-  </div>
-  <div style="display: flex; justify-content: space-around;">
-    <div>
+<table>
+  <tr>
+    <td>
       <h4>Attendance Taking</h4>
-      <p><em>Add attendance taking GIF here</em></p>
-    </div>
-    <div>
+      <img src="./public/attendance.gif">
+    </td>
+    <td>
       <h4>Record Filtering</h4>
-      <p><em>Add record filtering GIF here</em></p>
-    </div>
-  </div>
-</div>
+      <img src="./public/filtering.gif">
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <h4>Responsive Design</h4>
+      <img src="./public/responsive.gif">
+    </td>
+    <td>
+      <h4>Theme Switching</h4>
+      <img src="./public/theme.gif">
+    </td>
+  </tr>
+</table>
 
 ## Tech Stack
 
