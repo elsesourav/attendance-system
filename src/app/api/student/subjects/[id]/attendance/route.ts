@@ -34,7 +34,7 @@ export async function GET(
          ? parseInt(url.searchParams.get("limit")!)
          : undefined;
 
-      // Get subject details
+      // Get subject
       const subject = await getSubjectById(subjectId);
       if (!subject) {
          return NextResponse.json(
@@ -43,7 +43,7 @@ export async function GET(
          );
       }
 
-      // Check if the student is enrolled in this subject
+      // Verify enrollment
       const isEnrolled = (await executeQuery(
          "SELECT * FROM subject_enrollments WHERE student_id = ? AND subject_id = ?",
          [studentId, subjectId]
@@ -56,23 +56,23 @@ export async function GET(
          );
       }
 
-      // Get attendance records
+      // Get records
       let attendanceRecords = await getAttendanceByStudentAndSubject(
          Number(studentId),
          subjectId
       );
 
-      // Sort by date (newest first)
+      // Sort by date
       attendanceRecords.sort(
          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
       );
 
-      // Apply limit if specified
+      // Apply limit
       if (limit && limit > 0) {
          attendanceRecords = attendanceRecords.slice(0, limit);
       }
 
-      // Get attendance statistics
+      // Get stats
       const stats = await getAttendanceStats(Number(studentId), subjectId);
 
       return NextResponse.json({

@@ -11,7 +11,7 @@ export async function GET() {
          return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
 
-      // Get all students
+      // Get students
       const students = await executeQuery(
          `SELECT id, name, email, registration_number, mobile_number
        FROM students

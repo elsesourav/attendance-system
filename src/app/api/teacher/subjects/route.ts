@@ -13,7 +13,7 @@ export async function GET() {
 
       const teacherId = session.user.id;
 
-      // Get all subjects for this teacher with stream name and student count
+      // Get teacher subjects
       const subjects = await executeQuery(
          `SELECT s.id, s.name, s.description, s.stream_id,
          str.name as streamName,

@@ -25,13 +25,55 @@ import {
    FiUser,
    FiUsers,
 } from "react-icons/fi";
+import icon128 from "/public/images/icon-128.png";
+import icon670 from "/public/images/icon-670.png";
 
 export default function Home() {
    const { data: session } = useSession();
    const router = useRouter();
    const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-   // Redirect authenticated users to their dashboard
+   // Feature cards data
+   const featureCardsData = [
+      {
+         icon: FiUsers,
+         title: "User Management",
+         description:
+            "Separate interfaces for teachers and students with role-based access control.",
+      },
+      {
+         icon: FiLayers,
+         title: "Stream Management",
+         description:
+            "Create and manage academic streams with associated subjects.",
+      },
+      {
+         icon: FiBook,
+         title: "Subject Enrollment",
+         description:
+            "Enroll students in specific subjects within streams for targeted attendance tracking.",
+      },
+      {
+         icon: FiCheckCircle,
+         title: "Attendance Tracking",
+         description:
+            "Mark and track attendance with options for present, absent, or late status.",
+      },
+      {
+         icon: FiDatabase,
+         title: "Attendance Records",
+         description:
+            "View and filter attendance records by date, subject, or status.",
+      },
+      {
+         icon: FiShield,
+         title: "Secure Authentication",
+         description:
+            "Secure login and registration with role-based access control.",
+      },
+   ];
+
+   // Redirect to dashboard
    useEffect(() => {
       if (session?.user) {
          if (session.user.role === "teacher") {
@@ -49,7 +91,7 @@ export default function Home() {
             <div className="container flex h-16 items-center justify-between">
                <div className="flex items-center gap-2 font-bold text-xl">
                   <Image
-                     src="/images/icon-64.png"
+                     src={icon128}
                      alt="Attendance System Logo"
                      width={32}
                      height={32}
@@ -58,7 +100,7 @@ export default function Home() {
                   <span className="hidden sm:inline">Attendance System</span>
                </div>
 
-               {/* Desktop Navigation */}
+               {/* Desktop Nav */}
                <div className="hidden md:flex items-center gap-4">
                   <ThemeToggle />
                   <Link href="/login">
@@ -69,7 +111,7 @@ export default function Home() {
                   </Link>
                </div>
 
-               {/* Mobile Navigation */}
+               {/* Mobile Nav */}
                <div className="flex md:hidden items-center gap-4">
                   <ThemeToggle />
                   <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
@@ -89,10 +131,10 @@ export default function Home() {
                         <div className="flex flex-col gap-6 mt-6">
                            <div className="flex items-center gap-2">
                               <Image
-                                 src="/images/icon-64.png"
+                                 src={icon670}
                                  alt="Attendance System Logo"
-                                 width={32}
-                                 height={32}
+                                 width={64}
+                                 height={64}
                               />
                               <span className="font-bold">
                                  Attendance System
@@ -137,12 +179,12 @@ export default function Home() {
             </div>
          </header>
 
-         {/* Hero Section */}
-         <section className="container py-12 md:py-24 lg:py-32 space-y-8">
+         {/* Hero */}
+         <section className="container py-12 md:py-20 lg:py-28 space-y-8">
             <div className="mx-auto flex max-w-[58rem] flex-col items-center justify-center gap-6 text-center">
-               <div className="relative w-24 h-24 md:w-32 md:h-32 mb-2">
+               <div className="relative w-24 h-24 md:w-40 md:h-40 mb-2">
                   <Image
-                     src="/images/icon-1024.png"
+                     src={icon670}
                      alt="Attendance System Logo"
                      fill
                      priority
@@ -178,7 +220,7 @@ export default function Home() {
             </div>
          </section>
 
-         {/* Features Section */}
+         {/* Features */}
          <section className="container py-12 md:py-24 lg:py-32 bg-muted/50">
             <div className="mx-auto flex max-w-[58rem] flex-col items-center justify-center gap-4 text-center">
                <h2 className="text-3xl font-bold leading-tight tracking-tighter md:text-4xl">
@@ -189,95 +231,39 @@ export default function Home() {
                   educational institutions.
                </p>
             </div>
-            <div className="mx-auto grid justify-center gap-4 grid-cols-1 sm:grid-cols-2 md:max-w-[64rem] md:grid-cols-3 lg:gap-8 mt-8">
-               <Card className="flex flex-col items-center text-center p-4 h-full">
-                  <CardHeader className="pb-2">
-                     <div className="p-2 bg-primary/10 rounded-full mb-3">
-                        <FiUsers className="h-6 w-6 text-primary" />
+            <div className="mx-auto grid justify-center gap-x-4 gap-y-8 grid-cols-1 sm:grid-cols-2 md:max-w-[64rem] md:grid-cols-3 lg:gap-y-16 mt-8">
+               {featureCardsData.map((feature, index) => {
+                  const Icon = feature.icon;
+                  return (
+                     <div
+                        className="relative grid place-items-center pt-6"
+                        key={index}
+                     >
+                        <div className="absolute -top-6 bg-gradient-to-br from-primary/20 to-primary/10 rounded-full p-4 shadow-lg shadow-muted border border-primary/20 backdrop-blur-sm z-10">
+                           <Icon className="size-8 md:size-12 text-primary" />
+                        </div>
+
+                        <Card className="flex py-4 flex-col items-center text-center h-full rounded-xl border-0 shadow-lg backdrop-blur-sm bg-background/40 hover:shadow-xl transition-all duration-300">
+                           <div className="w-full mt-4 px-6 flex flex-col items-center relative">
+                              <div className="mt-4">
+                                 <CardTitle className="text-2xl font-bold">
+                                    {feature.title}
+                                 </CardTitle>
+                              </div>
+                           </div>
+                           <CardContent className="pt-2 pb-4 px-6">
+                              <CardDescription className="text-base">
+                                 {feature.description}
+                              </CardDescription>
+                           </CardContent>
+                        </Card>
                      </div>
-                     <CardTitle>User Management</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                     <CardDescription>
-                        Separate interfaces for teachers and students with
-                        role-based access control.
-                     </CardDescription>
-                  </CardContent>
-               </Card>
-               <Card className="flex flex-col items-center text-center p-4 h-full">
-                  <CardHeader className="pb-2">
-                     <div className="p-2 bg-primary/10 rounded-full mb-3">
-                        <FiLayers className="h-6 w-6 text-primary" />
-                     </div>
-                     <CardTitle>Stream Management</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                     <CardDescription>
-                        Create and manage academic streams with associated
-                        subjects.
-                     </CardDescription>
-                  </CardContent>
-               </Card>
-               <Card className="flex flex-col items-center text-center p-4 h-full">
-                  <CardHeader className="pb-2">
-                     <div className="p-2 bg-primary/10 rounded-full mb-3">
-                        <FiBook className="h-6 w-6 text-primary" />
-                     </div>
-                     <CardTitle>Subject Enrollment</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                     <CardDescription>
-                        Enroll students in specific subjects within streams for
-                        targeted attendance tracking.
-                     </CardDescription>
-                  </CardContent>
-               </Card>
-               <Card className="flex flex-col items-center text-center p-4 h-full">
-                  <CardHeader className="pb-2">
-                     <div className="p-2 bg-primary/10 rounded-full mb-3">
-                        <FiCheckCircle className="h-6 w-6 text-primary" />
-                     </div>
-                     <CardTitle>Attendance Tracking</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                     <CardDescription>
-                        Mark and track attendance with options for present,
-                        absent, or late status.
-                     </CardDescription>
-                  </CardContent>
-               </Card>
-               <Card className="flex flex-col items-center text-center p-4 h-full">
-                  <CardHeader className="pb-2">
-                     <div className="p-2 bg-primary/10 rounded-full mb-3">
-                        <FiDatabase className="h-6 w-6 text-primary" />
-                     </div>
-                     <CardTitle>Attendance Records</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                     <CardDescription>
-                        View and filter attendance records by date, subject, or
-                        status.
-                     </CardDescription>
-                  </CardContent>
-               </Card>
-               <Card className="flex flex-col items-center text-center p-4 h-full">
-                  <CardHeader className="pb-2">
-                     <div className="p-2 bg-primary/10 rounded-full mb-3">
-                        <FiShield className="h-6 w-6 text-primary" />
-                     </div>
-                     <CardTitle>Secure Authentication</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                     <CardDescription>
-                        Secure login and registration with role-based access
-                        control.
-                     </CardDescription>
-                  </CardContent>
-               </Card>
+                  );
+               })}
             </div>
          </section>
 
-         {/* CTA Section */}
+         {/* CTA */}
          <section className="container py-12 md:py-24 lg:py-32">
             <div className="mx-auto flex max-w-[58rem] flex-col items-center justify-center gap-4 text-center">
                <h2 className="text-3xl font-bold leading-tight tracking-tighter md:text-4xl">
@@ -338,7 +324,7 @@ export default function Home() {
             <div className="container flex flex-col items-center justify-between gap-4 md:h-24 md:flex-row">
                <div className="flex items-center gap-2">
                   <Image
-                     src="/images/icon-64.png"
+                     src={icon128}
                      alt="Attendance System Logo"
                      width={24}
                      height={24}

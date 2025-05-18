@@ -31,7 +31,7 @@ export async function GET(
       const studentId = session.user.id;
       const subjectId = parseInt(id);
 
-      // Get subject details
+      // Get subject
       const subject = await getSubjectById(subjectId);
       if (!subject) {
          return NextResponse.json(
@@ -40,7 +40,7 @@ export async function GET(
          );
       }
 
-      // Check if the student is enrolled in this subject
+      // Verify enrollment
       const isEnrolled = (await executeQuery(
          "SELECT * FROM subject_enrollments WHERE student_id = ? AND subject_id = ?",
          [studentId, subjectId]
@@ -53,7 +53,7 @@ export async function GET(
          );
       }
 
-      // Get additional details
+      // Get stream details
       const streamDetails = (await executeQuery(
          `SELECT s.name as streamName, t.name as teacherName
        FROM streams s

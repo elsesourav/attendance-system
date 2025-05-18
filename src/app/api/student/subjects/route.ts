@@ -13,7 +13,7 @@ export async function GET() {
 
       const studentId = session.user.id;
 
-      // Get all subjects the student is enrolled in
+      // Get enrolled subjects
       const subjects = await executeQuery(
          `SELECT s.id, s.name, s.description,
         str.id as stream_id, str.name as stream_name,

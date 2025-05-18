@@ -10,7 +10,7 @@ export async function GET(
    req: NextRequest,
    { params }: { params: Promise<{ id: string }> }
 ) {
-   // Define variables at the top level of the try block so they're available in the catch block
+   // Variables for error handling
    let subjectId: number = 0;
    let page: number = 1;
    let pageSize: number = 50;
@@ -39,7 +39,7 @@ export async function GET(
       month = url.searchParams.get("month");
       year = url.searchParams.get("year");
 
-      // Get subject details
+      // Get subject
       const subject = await getSubjectById(subjectId);
       if (!subject) {
          return NextResponse.json(
@@ -48,7 +48,7 @@ export async function GET(
          );
       }
 
-      // Check if the subject's stream belongs to the teacher
+      // Verify teacher access
       const stream = await getStreamById(subject.stream_id);
       if (!stream) {
          return NextResponse.json(
@@ -61,7 +61,7 @@ export async function GET(
          return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
       }
 
-      // Build the query based on parameters
+      // Build query
       let query = `
       SELECT a.id, a.student_id, s.name as student_name, s.registration_number, a.status, a.date
       FROM attendance a
@@ -71,23 +71,23 @@ export async function GET(
 
       const queryParams: (number | string)[] = [subjectId];
 
-      // Filter by specific date if provided
+      // Date filter
       if (date) {
          query += " AND a.date = ?";
          queryParams.push(date);
       }
-      // Filter by month and year if provided
+      // Month/year filter
       else if (month && year) {
          query += " AND MONTH(a.date) = ? AND YEAR(a.date) = ?";
          queryParams.push(parseInt(month), parseInt(year));
       }
-      // Filter by year only if provided
+      // Year filter
       else if (year) {
          query += " AND YEAR(a.date) = ?";
          queryParams.push(parseInt(year));
       }
 
-      // Get total count for pagination
+      // Count for pagination
       let countQuery = `
          SELECT COUNT(*) as total
          FROM attendance a
@@ -97,7 +97,7 @@ export async function GET(
 
       const countParams: (number | string)[] = [subjectId];
 
-      // Add the same filters to the count query
+      // Apply filters to count
       if (date) {
          countQuery += " AND a.date = ?";
          countParams.push(date);
@@ -114,17 +114,17 @@ export async function GET(
       ];
       const total = countResult[0].total;
 
-      // Add sorting
+      // Sort records
       query += " ORDER BY a.date DESC, s.name ASC";
 
-      // Add pagination
+      // Pagination
       const offset = (page - 1) * pageSize;
       query += ` LIMIT ${pageSize} OFFSET ${offset}`;
 
-      // Execute the main query
+      // Get records
       const attendanceRecords = await executeQuery(query, queryParams);
 
-      // Return records with pagination metadata
+      // Return with pagination
       return NextResponse.json({
          records: attendanceRecords,
          pagination: {
@@ -182,7 +182,7 @@ export async function POST(
          );
       }
 
-      // Get subject details
+      // Get subject
       const subject = await getSubjectById(subjectId);
       if (!subject) {
          return NextResponse.json(
@@ -191,7 +191,7 @@ export async function POST(
          );
       }
 
-      // Check if the subject's stream belongs to the teacher
+      // Verify teacher access
       const stream = await getStreamById(subject.stream_id);
       if (!stream) {
          return NextResponse.json(
@@ -204,7 +204,7 @@ export async function POST(
          return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
       }
 
-      // Mark attendance for each student
+      // Mark attendance
       for (const record of records) {
          await markAttendance(
             record.student_id,

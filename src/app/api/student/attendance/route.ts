@@ -14,17 +14,17 @@ export async function GET(req: NextRequest) {
       const studentId = session.user.id;
       const url = new URL(req.url);
 
-      // Parse query parameters for filtering
+      // Get filters
       const month = url.searchParams.get("month");
       const year = url.searchParams.get("year");
       const limit = url.searchParams.get("limit")
          ? parseInt(url.searchParams.get("limit")!)
          : undefined;
 
-      // Get all attendance records for the student
+      // Get records
       let attendanceRecords = await getAttendanceByStudentId(Number(studentId));
 
-      // Apply filters if provided
+      // Apply filters
       if (month && year) {
          const monthNum = parseInt(month);
          const yearNum = parseInt(year);
@@ -45,17 +45,17 @@ export async function GET(req: NextRequest) {
          });
       }
 
-      // Sort by date (newest first)
+      // Sort by date
       attendanceRecords.sort(
          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
       );
 
-      // Apply limit if specified
+      // Apply limit
       if (limit && limit > 0) {
          attendanceRecords = attendanceRecords.slice(0, limit);
       }
 
-      // Calculate overall attendance statistics
+      // Calculate stats
       const stats = {
          total: attendanceRecords.length,
          present: attendanceRecords.filter(

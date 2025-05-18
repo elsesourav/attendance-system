@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function DELETE(
    req: NextRequest,
-   { params }: { params: Promise<{ id: string, studentId: string }> }
+   { params }: { params: Promise<{ id: string; studentId: string }> }
 ) {
    try {
       const id = (await params).id;
@@ -22,7 +22,7 @@ export async function DELETE(
       const subjectId = parseInt(id);
       const studentId = parseInt(sid);
 
-      // Get subject details
+      // Get subject
       const subject = await getSubjectById(subjectId);
       if (!subject) {
          return NextResponse.json(
@@ -31,7 +31,7 @@ export async function DELETE(
          );
       }
 
-      // Check if the subject's stream belongs to the teacher
+      // Verify teacher access
       const stream = await getStreamById(subject.stream_id);
       if (!stream) {
          return NextResponse.json(
@@ -44,7 +44,7 @@ export async function DELETE(
          return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
       }
 
-      // Unenroll the student from the subject
+      // Unenroll student
       const success = await unenrollStudentFromSubject(studentId, subjectId);
 
       if (!success) {

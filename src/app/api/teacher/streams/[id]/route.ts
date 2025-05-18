@@ -21,7 +21,7 @@ export async function GET(
       const teacherId = session.user.id;
       const streamId = parseInt(id);
 
-      // Get stream details
+      // Get stream
       const stream = await getStreamById(streamId);
 
       if (!stream) {
@@ -31,7 +31,7 @@ export async function GET(
          );
       }
 
-      // Check if the stream belongs to the teacher
+      // Verify teacher access
       if (stream.teacher_id !== Number(teacherId)) {
          return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
       }
@@ -43,7 +43,7 @@ export async function GET(
       )) as [{ count: number }];
       const subjectCount = subjectCountResult[0]?.count || 0;
 
-      // Get student count (distinct students enrolled in any subject of this stream)
+      // Get student count
       const studentCountResult = (await executeQuery(
          `SELECT COUNT(DISTINCT se.student_id) as count
        FROM subject_enrollments se
@@ -83,7 +83,7 @@ export async function PUT(
       const streamId = parseInt(id);
       const { name, description } = await req.json();
 
-      // Check if the stream exists and belongs to the teacher
+      // Verify stream access
       const stream = await getStreamById(streamId);
 
       if (!stream) {
@@ -138,7 +138,7 @@ export async function DELETE(
       const teacherId = session.user.id;
       const streamId = parseInt(id);
 
-      // Check if the stream exists and belongs to the teacher
+      // Verify stream access
       const stream = await getStreamById(streamId);
 
       if (!stream) {

@@ -9,7 +9,7 @@ export async function middleware(request: NextRequest) {
    const isStudent = token?.role === "student";
    const path = request.nextUrl.pathname;
 
-   // Public routes that don't require authentication
+   // Public routes
    const publicRoutes = [
       "/",
       "/login",
@@ -21,12 +21,12 @@ export async function middleware(request: NextRequest) {
       path.startsWith("/api/auth") ||
       path.startsWith("/api/register");
 
-   // Redirect to login if not authenticated and not accessing a public route
+   // Redirect to login
    if (!isAuthenticated && !isPublicRoute) {
       return NextResponse.redirect(new URL("/", request.url));
    }
 
-   // Redirect to appropriate dashboard if already logged in and trying to access login or register pages
+   // Redirect to dashboard
    if (isAuthenticated && (path === "/login" || path.startsWith("/register"))) {
       if (isTeacher) {
          return NextResponse.redirect(
@@ -39,7 +39,7 @@ export async function middleware(request: NextRequest) {
       }
    }
 
-   // Protect teacher routes
+   // Teacher routes
    if (path.startsWith("/teacher") && !isTeacher) {
       if (isStudent) {
          return NextResponse.redirect(
@@ -49,7 +49,7 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL("/login", request.url));
    }
 
-   // Protect student routes
+   // Student routes
    if (path.startsWith("/student") && !isStudent) {
       if (isTeacher) {
          return NextResponse.redirect(
@@ -64,13 +64,7 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
    matcher: [
-      /*
-       * Match all request paths except for the ones starting with:
-       * - api/auth (Next Auth API routes)
-       * - _next/static (static files)
-       * - _next/image (image optimization files)
-       * - favicon.ico (favicon file)
-       */
+      // Exclude Next.js files and images
       "/((?!_next/static|_next/image|favicon.ico).*)",
    ],
 };

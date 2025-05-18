@@ -26,7 +26,7 @@ export async function GET(
       const teacherId = session.user.id;
       const streamId = parseInt(id);
 
-      // Check if the stream belongs to the teacher
+      // Verify teacher access
       const stream = await getStreamById(streamId);
       if (!stream) {
          return NextResponse.json(
@@ -39,7 +39,7 @@ export async function GET(
          return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
       }
 
-      // Get subjects in this stream
+      // Get subjects
       const subjects = await executeQuery(
          `SELECT id, name, description
        FROM subjects
@@ -74,7 +74,7 @@ export async function POST(
       const streamId = parseInt(id);
       const { name, description } = await req.json();
 
-      // Check if the stream belongs to the teacher
+      // Verify teacher access
       const stream = await getStreamById(streamId);
       if (!stream) {
          return NextResponse.json(
@@ -94,14 +94,14 @@ export async function POST(
          );
       }
 
-      // Create the subject
+      // Create subject
       const subjectId = await createSubject({
          name,
          description,
          stream_id: streamId,
       });
 
-      // Get the created subject
+      // Get created subject
       const subjects = (await executeQuery(
          "SELECT id, name, description FROM subjects WHERE id = ?",
          [subjectId]

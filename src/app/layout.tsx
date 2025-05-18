@@ -4,6 +4,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import icon128 from "/public/images/icon-128.png";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -13,12 +14,7 @@ export const metadata: Metadata = {
    description: "A system for tracking student attendance",
    icons: {
       icon: [
-         { url: "/images/icon-64.png", sizes: "64x64", type: "image/png" },
-         {
-            url: "/images/icon-1024.png",
-            sizes: "1024x1024",
-            type: "image/png",
-         },
+         { url: icon128.src, sizes: "64x64", type: "image/png" },
       ],
    },
 };

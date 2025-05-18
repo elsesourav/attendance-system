@@ -24,7 +24,7 @@ export async function GET(
       const teacherId = session.user.id;
       const subjectId = parseInt(id);
 
-      // Get subject details
+      // Get subject
       const subject = await getSubjectById(subjectId);
       if (!subject) {
          return NextResponse.json(
@@ -33,7 +33,7 @@ export async function GET(
          );
       }
 
-      // Check if the subject's stream belongs to the teacher
+      // Verify teacher access
       const stream = await getStreamById(subject.stream_id);
       if (!stream) {
          return NextResponse.json(
@@ -46,7 +46,7 @@ export async function GET(
          return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
       }
 
-      // Get student count for this subject
+      // Get student count
       const studentCountResult = (await executeQuery(
          `SELECT COUNT(*) as count
        FROM subject_enrollments
@@ -86,7 +86,7 @@ export async function PUT(
       const subjectId = parseInt(id);
       const { name, description } = await req.json();
 
-      // Get subject details
+      // Get subject
       const subject = await getSubjectById(subjectId);
       if (!subject) {
          return NextResponse.json(
@@ -95,7 +95,7 @@ export async function PUT(
          );
       }
 
-      // Check if the subject's stream belongs to the teacher
+      // Verify teacher access
       const stream = await getStreamById(subject.stream_id);
       if (!stream) {
          return NextResponse.json(
@@ -115,7 +115,7 @@ export async function PUT(
          );
       }
 
-      // Update the subject
+      // Update subject
       const updated = await updateSubject(subjectId, { name, description });
 
       if (!updated) {
@@ -150,7 +150,7 @@ export async function DELETE(
       const teacherId = session.user.id;
       const subjectId = parseInt(id);
 
-      // Get subject details
+      // Get subject
       const subject = await getSubjectById(subjectId);
       if (!subject) {
          return NextResponse.json(
@@ -159,7 +159,7 @@ export async function DELETE(
          );
       }
 
-      // Check if the subject's stream belongs to the teacher
+      // Verify teacher access
       const stream = await getStreamById(subject.stream_id);
       if (!stream) {
          return NextResponse.json(
@@ -172,7 +172,7 @@ export async function DELETE(
          return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
       }
 
-      // Delete the subject
+      // Delete subject
       const deleted = await deleteSubject(subjectId);
 
       if (!deleted) {

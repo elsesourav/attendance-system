@@ -53,7 +53,7 @@ export async function GET(req: NextRequest) {
 
       const teacherId = session.user.id;
 
-      // Get month and year filters from query parameters
+      // Get filters
       const url = new URL(req.url);
       const month = url.searchParams.get("month");
       const year = url.searchParams.get("year");
@@ -61,14 +61,14 @@ export async function GET(req: NextRequest) {
          ? parseInt(url.searchParams.get("limit")!)
          : 15;
 
-      // Create date filter conditions
+      // Date filters
       let dateFilter = "";
       let dateParams: string[] = [];
 
       if (month && year) {
-         // Filter by specific month and year
+         // Month and year
          const startDate = new Date(parseInt(year), parseInt(month) - 1, 1);
-         const endDate = new Date(parseInt(year), parseInt(month), 0); // Last day of month
+         const endDate = new Date(parseInt(year), parseInt(month), 0);
 
          dateFilter = "AND (a.date BETWEEN ? AND ?)";
          dateParams = [
@@ -76,7 +76,7 @@ export async function GET(req: NextRequest) {
             endDate.toISOString().split("T")[0],
          ];
       } else if (year) {
-         // Filter by year only
+         // Year only
          const startDate = new Date(parseInt(year), 0, 1);
          const endDate = new Date(parseInt(year), 11, 31);
 
@@ -87,7 +87,7 @@ export async function GET(req: NextRequest) {
          ];
       }
 
-      // Get recent attendance records taken by this teacher
+      // Attendance records
       const attendanceActivity = (await executeQuery(
          `SELECT a.id, a.date, a.status, s.name as student_name,
          sub.name as subject_name, sub.id as subject_id
@@ -101,7 +101,7 @@ export async function GET(req: NextRequest) {
          [teacherId, ...dateParams]
       )) as AttendanceActivity[];
 
-      // Get recent subject enrollments for subjects taught by this teacher
+      // Subject enrollments
       let enrollmentDateFilter = "";
       if (month && year) {
          enrollmentDateFilter = "AND (DATE(se.created_at) BETWEEN ? AND ?)";
@@ -122,7 +122,7 @@ export async function GET(req: NextRequest) {
          dateFilter ? [teacherId, ...dateParams] : [teacherId]
       )) as EnrollmentActivity[];
 
-      // Get recently created subjects by this teacher
+      // Created subjects
       let subjectDateFilter = "";
       if (month && year) {
          subjectDateFilter = "AND (DATE(sub.created_at) BETWEEN ? AND ?)";
@@ -140,7 +140,7 @@ export async function GET(req: NextRequest) {
          dateFilter ? [teacherId, ...dateParams] : [teacherId]
       )) as SubjectActivity[];
 
-      // Get recently created streams by this teacher
+      // Created streams
       let streamDateFilter = "";
       if (month && year) {
          streamDateFilter = "AND (DATE(created_at) BETWEEN ? AND ?)";
@@ -157,7 +157,7 @@ export async function GET(req: NextRequest) {
          dateFilter ? [teacherId, ...dateParams] : [teacherId]
       )) as StreamActivity[];
 
-      // Combine and format all activities
+      // Format activities
       const allActivities: FormattedActivity[] = [
          ...attendanceActivity.map((item) => ({
             type: "attendance" as const,
@@ -193,7 +193,7 @@ export async function GET(req: NextRequest) {
          })),
       ];
 
-      // Sort by timestamp (most recent first)
+      // Sort by time
       allActivities.sort((a, b) => b.timestamp - a.timestamp);
 
       return NextResponse.json(allActivities.slice(0, limit));

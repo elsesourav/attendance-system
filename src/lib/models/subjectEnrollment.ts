@@ -20,7 +20,7 @@ export async function enrollStudentInSubject(
       return result.insertId;
    } catch (error) {
       const mysqlError = error as { code?: string };
-      // Check if it's a duplicate entry error
+      // Check for duplicate
       if (mysqlError.code === "ER_DUP_ENTRY") {
          throw new Error("Student is already enrolled in this subject");
       }
@@ -33,13 +33,13 @@ export async function unenrollStudentFromSubject(
    subjectId: number
 ): Promise<boolean> {
    try {
-      // First, delete all attendance records for this student in this subject
+      // Delete attendance records
       await executeQuery(
          "DELETE FROM attendance WHERE student_id = ? AND subject_id = ?",
          [studentId, subjectId]
       );
 
-      // Then, delete the enrollment
+      // Delete enrollment
       const result = (await executeQuery(
          "DELETE FROM subject_enrollments WHERE student_id = ? AND subject_id = ?",
          [studentId, subjectId]

@@ -52,7 +52,7 @@ export default function StudentDashboard() {
    const [isLoading, setIsLoading] = useState(true);
    const [isLoadingAttendance, setIsLoadingAttendance] = useState(true);
 
-   // Hide loading overlay when component mounts
+   // Hide loading
    useEffect(() => {
       hideLoading();
    }, [hideLoading]);
@@ -78,7 +78,7 @@ export default function StudentDashboard() {
    useEffect(() => {
       const fetchRecentAttendance = async () => {
          try {
-            // Fetch recent attendance with a limit of 5 records
+            // Get recent records
             const response = await fetch("/api/student/attendance?limit=5");
             if (response.ok) {
                const data = await response.json();

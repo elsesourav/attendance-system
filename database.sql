@@ -4,6 +4,7 @@ CREATE DATABASE IF NOT EXISTS attendance_system;
 
 USE attendance_system;
 
+-- ================= CREATE TABLES =================
 CREATE TABLE
    IF NOT EXISTS teachers (
       id INT AUTO_INCREMENT PRIMARY KEY,
@@ -73,6 +74,7 @@ CREATE TABLE
       UNIQUE KEY (student_id, subject_id, date)
    );
 
+-- ================= INSERT TEST DATA =================
 INSERT INTO
    teachers (name, email, mobile_number, password)
 VALUES
@@ -140,7 +142,6 @@ VALUES
 --       "Bachelor of Engineering program",
 --       2
 --    );
-
 -- INSERT INTO
 --    subjects (name, description, stream_id)
 -- VALUES
@@ -159,7 +160,6 @@ VALUES
 --       "Engineering mechanics and dynamics",
 --       2
 --    );
-
 -- INSERT INTO
 --    subject_enrollments (student_id, subject_id)
 -- VALUES
@@ -167,7 +167,6 @@ VALUES
 --    (1, 2),
 --    (2, 2),
 --    (3, 3);
-
 -- INSERT INTO
 --    attendance (student_id, subject_id, status, date)
 -- VALUES

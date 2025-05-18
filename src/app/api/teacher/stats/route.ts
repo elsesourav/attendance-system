@@ -28,7 +28,7 @@ export async function GET() {
       )) as [{ count: number }];
       const subjectCount = subjectCountResult[0]?.count || 0;
 
-      // Get student count (unique students enrolled in teacher's subjects)
+      // Get student count
       const studentCountResult = (await executeQuery(
          `SELECT COUNT(DISTINCT se.student_id) as count
        FROM subject_enrollments se

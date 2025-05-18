@@ -71,11 +71,8 @@ export default function SubjectView() {
    const router = useRouter();
    const { showLoading, hideLoading } = useLoading();
    const subjectId = params.id as string;
-   // We can use these parameters for navigation if needed
-   // const searchParams = useSearchParams();
-   // const fromStream = searchParams.get("from") === "stream";
 
-   // Hide loading overlay when component mounts
+   // Hide loading
    useEffect(() => {
       hideLoading();
    }, [hideLoading]);
@@ -99,7 +96,7 @@ export default function SubjectView() {
    useEffect(() => {
       const fetchSubjectDetails = async () => {
          try {
-            // Fetch subject details
+            // Subject
             const subjectResponse = await fetch(
                `/api/teacher/subjects/${subjectId}`
             );
@@ -115,7 +112,7 @@ export default function SubjectView() {
             const subjectData = await subjectResponse.json();
             setSubject(subjectData);
 
-            // Fetch students enrolled in this subject
+            // Students
             const studentsResponse = await fetch(
                `/api/teacher/subjects/${subjectId}/students`
             );
@@ -126,7 +123,7 @@ export default function SubjectView() {
             const studentsData = await studentsResponse.json();
             setStudents(studentsData);
 
-            // Fetch today's attendance records
+            // Attendance
             const today = new Date().toISOString().split("T")[0]; // Format: YYYY-MM-DD
             const attendanceResponse = await fetch(
                `/api/teacher/subjects/${subjectId}/attendance?date=${today}`
@@ -158,7 +155,7 @@ export default function SubjectView() {
       }));
    };
 
-   // Function to check for existing attendance records for the selected date
+   // Check attendance
    const checkExistingAttendance = async (date: string) => {
       try {
          const response = await fetch(
@@ -172,7 +169,7 @@ export default function SubjectView() {
          const data = await response.json();
          const records = data.records || [];
 
-         // If records exist for this date, pre-populate the attendance data
+         // Pre-populate data
          if (records.length > 0) {
             const existingData: {
                [key: number]: "present" | "absent" | "late";
@@ -185,7 +182,7 @@ export default function SubjectView() {
             setAttendanceData(existingData);
             setIsEditingExistingAttendance(true);
          } else {
-            // No existing records, reset the form
+            // Reset form
             setAttendanceData({});
             setIsEditingExistingAttendance(false);
          }
@@ -197,14 +194,14 @@ export default function SubjectView() {
       }
    };
 
-   // Function to handle opening the attendance dialog
+   // Open dialog
    const handleOpenAttendanceDialog = async () => {
-      // Check for existing attendance records for today
+      // Check records
       await checkExistingAttendance(selectedDate);
       setIsAddingAttendance(true);
    };
 
-   // Effect to check for existing attendance when the selected date changes
+   // Check on date change
    useEffect(() => {
       if (isAddingAttendance) {
          checkExistingAttendance(selectedDate);
@@ -213,11 +210,10 @@ export default function SubjectView() {
    }, [selectedDate, isAddingAttendance, subjectId]);
 
    const handleSaveAttendance = async () => {
-      // Create a complete attendance record for all students
-      // Mark any student without a status as "absent"
+      // Complete attendance data
       const completeAttendanceData = { ...attendanceData };
 
-      // Check for any students without attendance status and mark them as absent
+      // Mark missing as absent
       students.forEach((student) => {
          if (!completeAttendanceData[student.id]) {
             completeAttendanceData[student.id] = "absent";
@@ -255,7 +251,7 @@ export default function SubjectView() {
             );
             setIsAddingAttendance(false);
 
-            // Refresh attendance records - get today's records
+            // Refresh records
             const today = new Date().toISOString().split("T")[0];
             const attendanceResponse = await fetch(
                `/api/teacher/subjects/${subjectId}/attendance?date=${today}`
@@ -292,7 +288,7 @@ export default function SubjectView() {
                size="icon"
                className="mr-2"
                onClick={() => {
-                  // Hide loading first, then navigate back
+                  // Hide loading
                   hideLoading();
                   router.back();
                }}
@@ -356,7 +352,9 @@ export default function SubjectView() {
 
          <div className="mt-8 flex justify-between items-center">
             <div>
-               <h2 className="text-lg md:text-2xl font-bold">Today&apos;s Attendance</h2>
+               <h2 className="text-lg md:text-2xl font-bold">
+                  Today&apos;s Attendance
+               </h2>
                <p className="text-sm text-muted-foreground">
                   {new Date().toLocaleDateString(undefined, {
                      weekday: "long",

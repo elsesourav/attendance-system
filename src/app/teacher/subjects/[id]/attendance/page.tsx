@@ -61,7 +61,7 @@ interface AttendanceRecord {
    date: string;
 }
 
-// Type for grouped attendance records
+// Grouped records
 interface GroupedAttendance {
    [date: string]: AttendanceRecord[];
 }
@@ -85,29 +85,29 @@ export default function TeacherAttendanceView() {
    const [attendanceData, setAttendanceData] = useState<{
       [key: number]: "present" | "absent" | "late";
    }>({});
-   // Get current date, month, and year for default filters
+   // Default dates
    const today = new Date();
-   const currentMonth = String(today.getMonth() + 1); // Month is 0-indexed
+   const currentMonth = String(today.getMonth() + 1);
    const currentYear = String(today.getFullYear());
 
-   // Initialize with current month and year as default filters
+   // Filters
    const [filterDate, setFilterDate] = useState<string>("");
    const [filterMonth, setFilterMonth] = useState<string>(currentMonth);
    const [filterYear, setFilterYear] = useState<string>(currentYear);
    const [currentPage, setCurrentPage] = useState<number>(1);
    const [totalPages, setTotalPages] = useState<number>(1);
    const [totalRecords, setTotalRecords] = useState<number>(0);
-   const pageSize = 50; // Number of records per page
+   const pageSize = 50;
    const [isLoadingRecords, setIsLoadingRecords] = useState<boolean>(false);
 
-   // State to track grouped attendance records by date
+   // Grouped state
    const [groupedAttendance, setGroupedAttendance] =
       useState<GroupedAttendance>({});
 
    useEffect(() => {
       const fetchAttendanceData = async () => {
          try {
-            // Fetch subject details
+            // Subject
             const subjectResponse = await fetch(
                `/api/teacher/subjects/${subjectId}`
             );
@@ -123,7 +123,7 @@ export default function TeacherAttendanceView() {
             const subjectData = await subjectResponse.json();
             setSubject(subjectData);
 
-            // Fetch students enrolled in this subject
+            // Students
             const studentsResponse = await fetch(
                `/api/teacher/subjects/${subjectId}/students`
             );
@@ -134,7 +134,7 @@ export default function TeacherAttendanceView() {
             const studentsData = await studentsResponse.json();
             setStudents(studentsData);
 
-            // Fetch attendance records is handled by the other useEffect
+            // Records in other useEffect
          } catch (error) {
             console.error("Error fetching attendance data:", error);
             toast.error("Failed to load attendance data");
@@ -149,7 +149,7 @@ export default function TeacherAttendanceView() {
    const fetchAttendanceRecords = async () => {
       setIsLoadingRecords(true);
       try {
-         // Build the URL with filters and pagination
+         // Build URL
          let url = `/api/teacher/subjects/${subjectId}/attendance?page=${currentPage}&pageSize=${pageSize}`;
 
          if (filterDate) {
@@ -162,7 +162,7 @@ export default function TeacherAttendanceView() {
 
          const attendanceResponse = await fetch(url);
          if (!attendanceResponse.ok) {
-            // Try to get more detailed error information
+            // Error details
             try {
                const errorData = await attendanceResponse.json();
                throw new Error(
@@ -171,7 +171,7 @@ export default function TeacherAttendanceView() {
                      "Failed to fetch attendance records"
                );
             } catch {
-               // If JSON parsing fails, throw a generic error with the status code
+               // Generic error
                throw new Error(
                   `Failed to fetch attendance records: ${attendanceResponse.status}`
                );
@@ -183,10 +183,10 @@ export default function TeacherAttendanceView() {
          setTotalPages(data.pagination.totalPages);
          setTotalRecords(data.pagination.total);
 
-         // Group records by date
+         // Group records
          const grouped = data.records.reduce(
             (acc: GroupedAttendance, record: AttendanceRecord) => {
-               // Format date as YYYY-MM-DD
+               // Format
                const dateKey = new Date(record.date)
                   .toISOString()
                   .split("T")[0];
@@ -199,7 +199,7 @@ export default function TeacherAttendanceView() {
             {} as GroupedAttendance
          );
 
-         // Sort dates in descending order (newest first)
+         // Sort by date
          const sortedGrouped: GroupedAttendance = {};
          Object.keys(grouped)
             .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())
@@ -219,7 +219,7 @@ export default function TeacherAttendanceView() {
             filterYear,
          });
 
-         // Show a more detailed error message
+         // Show error
          toast.error(
             error instanceof Error
                ? `Failed to load attendance records: ${error.message}`
@@ -230,7 +230,7 @@ export default function TeacherAttendanceView() {
       }
    };
 
-   // Fetch records when filters or pagination changes
+   // Fetch records
    useEffect(() => {
       fetchAttendanceRecords();
       // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -280,7 +280,7 @@ export default function TeacherAttendanceView() {
             setIsAddingAttendance(false);
             setAttendanceData({});
 
-            // Refresh attendance records
+            // Refresh
             await fetchAttendanceRecords();
          } else {
             const error = await response.json();
@@ -327,8 +327,6 @@ export default function TeacherAttendanceView() {
       return null; // Will redirect in the useEffect
    }
 
-   // No need to group by date anymore as we're using pagination and filters
-
    return (
       <div className="space-y-6">
          <div className="flex items-center">
@@ -337,7 +335,7 @@ export default function TeacherAttendanceView() {
                size="icon"
                className="mr-2"
                onClick={() => {
-                  // Hide loading first, then navigate back
+                  // Hide loading
                   hideLoading();
                   router.back();
                }}
@@ -355,7 +353,7 @@ export default function TeacherAttendanceView() {
             <CardContent>
                <div className="flex flex-col gap-4">
                   <div className="flex flex-col gap-4">
-                     {/* Date Filter - Responsive */}
+                     {/* Date */}
                      <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
                         <div className="flex items-center gap-2">
                            <FiFilter className="text-muted-foreground flex-shrink-0" />
@@ -386,7 +384,7 @@ export default function TeacherAttendanceView() {
                         </div>
                      </div>
 
-                     {/* Month/Year Filter - Responsive */}
+                     {/* Month/Year */}
                      <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
                         <div className="flex items-center gap-2">
                            <div className="text-sm font-medium ml-6 sm:ml-0">
@@ -465,7 +463,7 @@ export default function TeacherAttendanceView() {
                         </div>
                      </div>
 
-                     {/* Action Buttons - Responsive */}
+                     {/* Actions */}
                      <div className="flex flex-wrap gap-2 justify-between items-center">
                         {(filterDate || filterMonth || filterYear) && (
                            <Button

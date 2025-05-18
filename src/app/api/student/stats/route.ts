@@ -13,7 +13,7 @@ export async function GET() {
 
       const studentId = session.user.id;
 
-      // Get stream count (distinct streams where student is enrolled in at least one subject)
+      // Get stream count
       const streamCountResult = (await executeQuery(
          `SELECT COUNT(DISTINCT sub.stream_id) as count
           FROM subject_enrollments se
@@ -31,7 +31,7 @@ export async function GET() {
       )) as [{ count: number }];
       const subjectCount = subjectCountResult[0]?.count || 0;
 
-      // Get attendance percentage
+      // Get attendance
       const attendanceResult = (await executeQuery(
          `SELECT
          COUNT(*) as total,

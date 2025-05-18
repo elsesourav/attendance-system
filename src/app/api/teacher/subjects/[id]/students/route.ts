@@ -23,7 +23,7 @@ export async function GET(
       const teacherId = session.user.id;
       const subjectId = parseInt(id);
 
-      // Get subject details
+      // Get subject
       const subject = await getSubjectById(subjectId);
       if (!subject) {
          return NextResponse.json(
@@ -32,7 +32,7 @@ export async function GET(
          );
       }
 
-      // Check if the subject's stream belongs to the teacher
+      // Verify teacher access
       const stream = await getStreamById(subject.stream_id);
       if (!stream) {
          return NextResponse.json(
@@ -45,7 +45,7 @@ export async function GET(
          return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
       }
 
-      // Get students enrolled in this subject
+      // Get enrolled students
       const students = await getStudentsBySubjectId(subjectId);
 
       return NextResponse.json(students);
@@ -81,7 +81,7 @@ export async function POST(
          );
       }
 
-      // Get subject details
+      // Get subject
       const subject = await getSubjectById(subjectId);
       if (!subject) {
          return NextResponse.json(
@@ -90,7 +90,7 @@ export async function POST(
          );
       }
 
-      // Check if the subject's stream belongs to the teacher
+      // Verify teacher access
       const stream = await getStreamById(subject.stream_id);
       if (!stream) {
          return NextResponse.json(
@@ -103,7 +103,7 @@ export async function POST(
          return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
       }
 
-      // Enroll the student in the subject
+      // Enroll student
       try {
          await enrollStudentInSubject(studentId, subjectId);
          return NextResponse.json({ success: true });

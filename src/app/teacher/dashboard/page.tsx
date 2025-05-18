@@ -51,7 +51,7 @@ export default function TeacherDashboard() {
    const [isLoading, setIsLoading] = useState(true);
    const [isLoadingActivity, setIsLoadingActivity] = useState(true);
 
-   // Hide loading overlay when component mounts
+   // Hide loading
    useEffect(() => {
       hideLoading();
    }, [hideLoading]);
@@ -77,7 +77,9 @@ export default function TeacherDashboard() {
    useEffect(() => {
       const fetchActivity = async () => {
          try {
-            const response = await fetch(`/api/teacher/activity?limit=${limit}`);
+            const response = await fetch(
+               `/api/teacher/activity?limit=${limit}`
+            );
             if (response.ok) {
                const data = await response.json();
                setActivities(data);
@@ -92,7 +94,7 @@ export default function TeacherDashboard() {
       fetchActivity();
    }, []);
 
-   // Function to get the appropriate icon for each activity type
+   // Get activity icon
    const getActivityIcon = (type: string) => {
       switch (type) {
          case "attendance":
@@ -108,7 +110,7 @@ export default function TeacherDashboard() {
       }
    };
 
-   // Function to get the appropriate badge color for each activity type
+   // Get badge color
    const getActivityBadgeClass = (type: string) => {
       switch (type) {
          case "attendance":
@@ -124,24 +126,24 @@ export default function TeacherDashboard() {
       }
    };
 
-   // Function to format the date in a readable format
+   // Format date
    const formatDate = (dateString: string) => {
       const date = new Date(dateString);
       const now = new Date();
       const yesterday = new Date(now);
       yesterday.setDate(yesterday.getDate() - 1);
 
-      // Check if the date is today
+      // Today
       if (date.toDateString() === now.toDateString()) {
          return "Today";
       }
 
-      // Check if the date is yesterday
+      // Yesterday
       if (date.toDateString() === yesterday.toDateString()) {
          return "Yesterday";
       }
 
-      // Otherwise, return the formatted date
+      // Format
       return date.toLocaleDateString(undefined, {
          year: "numeric",
          month: "short",
